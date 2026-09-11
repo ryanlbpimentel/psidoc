@@ -1,4 +1,4 @@
-# psidock
+# psidoc
 
 An Electron application with React and TypeScript
 
@@ -33,4 +33,4 @@ $ npm run build:mac
 $ npm run build:linux
 ```
 
-# psidock
+# psidoc
