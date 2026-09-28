@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "module": "nodenext",
-    "moduleResolution": "nodenext",
+    "module": "esnext",
+    "moduleResolution": "bundler",
     "resolvePackageJsonExports": true,
     "esModuleInterop": true,
     "isolatedModules": true,
@@ -11,13 +11,42 @@
     "experimentalDecorators": true,
     "allowSyntheticDefaultImports": true,
     "target": "ES2023",
-    "types": ["node", "jest"],
+    "paths": {
+      "@common/*": [
+        "./src/common/*"
+      ],
+      "@modules/*": [
+        "./src/modules/*"
+      ],
+      "@prisma/client": [
+        "./prisma/generated/prisma/client"
+      ],
+      "@prisma/client/*": [
+        "./generated/prisma/*"
+      ]
+    },
+    "types": [
+      "node",
+      "jest"
+    ],
     "sourceMap": true,
     "outDir": "./dist",
-    "rootDir": ".",
     "incremental": true,
     "skipLibCheck": true,
-    "strict": true,
+    "strictNullChecks": true,
+    "forceConsistentCasingInFileNames": true,
+    "strictBindCallApply": false,
+    "noFallthroughCasesInSwitch": false,
     "strictPropertyInitialization": false
-  }
+  },
+  "include": [
+    "src/**/*.ts",
+    "prisma/**/*.ts",
+    "prisma/generated/prisma/**/*.ts",
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*spec.ts"
+  ]
 }
