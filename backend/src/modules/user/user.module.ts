@@ -6,8 +6,7 @@ import { UserService } from './user.service'
 @Module({
   imports: [
     JwtModule.register({
-      // Troque JWT_SECRET no .env em qualquer ambiente real — este é só um valor de desenvolvimento.
-      secret: process.env.JWT_SECRET ?? 'dev-secret-troque-em-producao',
+      secret: process.env.JWT_TOKEN,
       signOptions: { expiresIn: '6h' },
     }),
   ],

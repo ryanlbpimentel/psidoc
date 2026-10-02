@@ -18,26 +18,27 @@ model Usuario {
   criado_em     DateTime @default(now()) @db.Timestamp(6)
   atualizado_em DateTime @default(now()) @updatedAt @db.Timestamp(6)
 
-  psicologo           Psicologo?
-  recuperacoes_senha  RecuperacaoSenha[]
+  psicologo Psicologo?
+  tokens    Token[]
 }
 
-/// Todo psicólogo é um usuário (RF01): registro profissional (CRP) ligado 1:1 ao Usuario.
 model Psicologo {
-  id_psicologo Int      @id @default(autoincrement())
-  id_usuario   Int      @unique
-  crp          String   @unique @db.VarChar(20)
-  criado_em    DateTime @default(now()) @db.Timestamp(6)
+  id_usuario Int    @id
+  crp        String @unique @db.VarChar(7)
 
   usuario Usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
 
   @@map("psicologo")
 }
 
-/// Código de recuperação de senha (RF04), de uso único. Guarda só o hash do token.
-model RecuperacaoSenha {
-  id         Int       @id @default(autoincrement())
+enum TokenTipo {
+  RECUPERACAO_SENHA
+}
+
+model Token {
+  id_token   Int       @id @default(autoincrement())
   id_usuario Int
+  tipo       TokenTipo @default(RECUPERACAO_SENHA)
   token_hash String    @unique @db.VarChar(64)
   expira_em  DateTime  @db.Timestamp(6)
   usado_em   DateTime? @db.Timestamp(6)
@@ -45,7 +46,6 @@ model RecuperacaoSenha {
 
   usuario Usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
 
-  @@index([id_usuario, criado_em])
-  @@map("recuperacao_senha")
+  @@index([id_usuario, tipo, criado_em])
+  @@map("token")
 }
-
