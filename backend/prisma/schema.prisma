@@ -17,5 +17,35 @@ model Usuario {
   esta_ativo    Boolean  @default(true)
   criado_em     DateTime @default(now()) @db.Timestamp(6)
   atualizado_em DateTime @default(now()) @updatedAt @db.Timestamp(6)
+
+  psicologo Psicologo?
+  tokens    Token[]
 }
 
+model Psicologo {
+  id_usuario Int    @id
+  crp        String @unique @db.VarChar(7)
+
+  usuario Usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+
+  @@map("psicologo")
+}
+
+enum TokenTipo {
+  RECUPERACAO_SENHA
+}
+
+model Token {
+  id_token   Int       @id @default(autoincrement())
+  id_usuario Int
+  tipo       TokenTipo @default(RECUPERACAO_SENHA)
+  token_hash String    @unique @db.VarChar(64)
+  expira_em  DateTime  @db.Timestamp(6)
+  usado_em   DateTime? @db.Timestamp(6)
+  criado_em  DateTime  @default(now()) @db.Timestamp(6)
+
+  usuario Usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+
+  @@index([id_usuario, tipo, criado_em])
+  @@map("token")
+}
