@@ -3,7 +3,7 @@ import { tokenStorage } from '@/core/auth/token'
 import { normalizeError } from './errors'
 
 export const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:3333',
+  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:3000',
   timeout: 10_000
 })
 
@@ -15,7 +15,9 @@ export const setUnauthorizedHandler = (handler: (() => void) | null) => {
 
 api.interceptors.request.use((config) => {
   const token = tokenStorage.get()
-  if (token) config.headers.set('Authorization', `Bearer ${token}`)
+  if (token) {
+    config.headers.set('Authorization', `Bearer ${token}`)
+  }
   return config
 })
 
@@ -24,7 +26,9 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const apiError = normalizeError(error)
-    if (apiError.status === 401 && tokenStorage.get()) onUnauthorized?.()
+    if (apiError.status === 401 && tokenStorage.get()) {
+      onUnauthorized?.()
+    }
     return Promise.reject(apiError)
   }
 )

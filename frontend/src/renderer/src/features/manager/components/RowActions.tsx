@@ -2,32 +2,36 @@ import { useEffect, useRef, useState } from 'react'
 import { EllipsisVertical } from 'lucide-react'
 import type { UserStatus } from '@/core/auth/auth.types'
 import { cn } from '@/shared/lib/cn'
+import type { ManagerAction } from '../services/manager.service'
 
 interface Action {
   label: string
-  status: UserStatus
+  action: ManagerAction
   danger?: boolean
 }
 
-const ACTIONS: Record<UserStatus, Action[]> = {
-  EM_ANALISE: [
-    { label: 'Aprovar acesso', status: 'ATIVO' },
-    { label: 'Recusar cadastro', status: 'INATIVO', danger: true }
-  ],
-  ATIVO: [{ label: 'Inativar acesso', status: 'INATIVO', danger: true }],
-  INATIVO: [{ label: 'Reativar acesso', status: 'ATIVO' }]
-}
 
 interface RowActionsProps {
   name: string
   status: UserStatus
+  validacao?: 'PENDENTE' | 'VALIDADO'
   disabled?: boolean
-  onSelect: (status: UserStatus) => void
+  onSelect: (action: ManagerAction) => void
 }
 
-export function RowActions({ name, status, disabled, onSelect }: RowActionsProps) {
+export function RowActions({ name, status, validacao, disabled, onSelect }: RowActionsProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
+
+  const currentActions: Action[] =
+    validacao === 'PENDENTE' || status === 'EM_ANALISE'
+      ? [
+          { label: 'Aprovar cadastro', action: 'APROVAR' },
+          { label: 'Reprovar cadastro', action: 'REPROVAR', danger: true }
+        ]
+      : status === 'ATIVO'
+        ? [{ label: 'Desativar acesso', action: 'INATIVAR', danger: true }]
+        : [{ label: 'Ativar acesso', action: 'ATIVAR' }]
 
   useEffect(() => {
     if (!open) return
@@ -56,14 +60,14 @@ export function RowActions({ name, status, disabled, onSelect }: RowActionsProps
       </button>
       {open && (
         <ul role="menu" className="absolute top-full right-0 z-20 mt-1 w-44 rounded-xl border border-line bg-white p-1 shadow-lg">
-          {ACTIONS[status].map((action) => (
-            <li key={action.status} role="none">
+          {currentActions.map((action) => (
+            <li key={action.action} role="none">
               <button
                 role="menuitem"
                 type="button"
                 onClick={() => {
                   setOpen(false)
-                  onSelect(action.status)
+                  onSelect(action.action)
                 }}
                 className={cn('w-full cursor-pointer rounded-lg px-3 py-2 text-left text-body transition hover:bg-slate-50', action.danger ? 'text-danger' : 'text-ink')}
               >

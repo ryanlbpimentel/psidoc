@@ -5,9 +5,12 @@ export interface SessionUser {
   id: string
   name: string
   email: string
-  /** Um usuário pode acumular perfis: um psicólogo também pode ser gestor. */
   roles: UserRole[]
   crp?: string
+}
+
+export interface BackendLoginResponse {
+  access_token: string
 }
 
 export interface LoginResponse {
@@ -16,15 +19,16 @@ export interface LoginResponse {
 }
 
 export interface TokenPayload {
-  sub: string
-  name: string
+  sub: string | number
+  id_usuario?: number
+  name?: string
+  nome?: string
   email: string
-  roles: UserRole[]
-  /** Formato antigo (um perfil só). Aceito na leitura para não derrubar sessões já salvas. */
+  roles?: UserRole[]
   role?: UserRole
+  nivel_permissao?: number
   crp?: string
-  exp: number // segundos (padrão JWT)
+  exp: number
 }
 
-export const hasRole = (user: Pick<SessionUser, 'roles'> | null | undefined, role: UserRole) =>
-  !!user?.roles.includes(role)
+export const hasRole = (user: Pick<SessionUser, 'roles'> | null | undefined, role: UserRole) => !!user?.roles.includes(role)
