@@ -7,7 +7,7 @@ import { renderizarTemplateEmail } from '../templates'
 @Injectable()
 export class MailtrapProvedorEmail extends ProvedorEmail {
   private readonly logger = new Logger(MailtrapProvedorEmail.name)
-  private readonly remetente: { endereco: string; nome: string }
+  private readonly remetente: { endereco: string, nome: string }
   private readonly client: MailtrapClient
 
   constructor(private readonly config: ConfigService) {
