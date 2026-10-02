@@ -4,7 +4,7 @@ import { IsEmail, IsNotEmpty, IsString, Length, MinLength } from 'class-validato
 export class RegistrarDto {
   @ApiProperty({
     description: 'Nome completo do psicólogo',
-    example: 'Dra. Maria Silva',
+    example: 'Katia Cilene Bizerra Pimentel',
   })
   @IsString()
   @IsNotEmpty({ message: 'O nome é obrigatório' })
@@ -12,14 +12,14 @@ export class RegistrarDto {
 
   @ApiProperty({
     description: 'Endereço de e-mail institucional ou profissional',
-    example: 'maria.silva@exemplo.com',
+    example: 'robofox600@gmail.com',
   })
   @IsEmail({}, { message: 'Informe um e-mail válido' })
   email: string
 
   @ApiProperty({
     description: 'CPF (apenas os 11 dígitos numéricos)',
-    example: '12345678901',
+    example: '20143908782',
   })
   @IsString()
   @Length(11, 11, { message: 'O CPF deve ter exatamente 11 dígitos' })
@@ -27,7 +27,7 @@ export class RegistrarDto {
 
   @ApiProperty({
     description: 'Telefone de contato com DDD',
-    example: '85999998888',
+    example: '21972672346',
   })
   @IsString()
   @IsNotEmpty({ message: 'O telefone é obrigatório' })
@@ -44,7 +44,7 @@ export class RegistrarDto {
 
   @ApiProperty({
     description: 'Registro profissional CRP (exatamente 7 dígitos)',
-    example: '1234567',
+    example: '1114185',
   })
   @IsString()
   @Length(7, 7, { message: 'O CRP deve ter exatamente 7 dígitos' })

@@ -1,25 +1,25 @@
 import { Injectable } from '@nestjs/common'
-import { ProvedorEmail, TemplateEmail } from './mail.interface'
+import { MailProvider, TemplateEmail } from './mail.interface'
 
 @Injectable()
 export class MailService {
-  constructor(private readonly provedorEmail: ProvedorEmail) {}
+  constructor(private readonly mailProvider: MailProvider) { }
 
   async enviarRecuperacaoSenha(para: string, nome: string, token: string): Promise<void> {
-    const link = `http://localhost:3000/redefinir-senha?token=${token}`
-
-    await this.provedorEmail.enviarEmail(
+    await this.mailProvider.enviarEmail(
       para,
       'Redefinição de Senha - PSIDOC',
       TemplateEmail.RECUPERACAO_SENHA,
-      { nome, link },
+      { nome, token },
     )
   }
 
-  // Alias para manter compatibilidade
-  async sendPasswordReset(to: string, nome: string, token: string): Promise<void> {
-    return this.enviarRecuperacaoSenha(to, nome, token)
+  async enviarCadastroAprovado(para: string, nome: string): Promise<void> {
+    await this.mailProvider.enviarEmail(
+      para,
+      'Cadastro Aprovado - PSIDOC',
+      TemplateEmail.CADASTRO_APROVADO,
+      { nome },
+    )
   }
 }
-
-export { MailService as EmailService }

@@ -1,12 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { MailtrapClient } from 'mailtrap'
-import { ProvedorEmail, TemplateEmail } from '../mail.interface'
+import { MailProvider, TemplateEmail } from '../mail.interface'
 import { renderizarTemplateEmail } from '../templates'
 
 @Injectable()
-export class MailtrapProvedorEmail extends ProvedorEmail {
-  private readonly logger = new Logger(MailtrapProvedorEmail.name)
+export class MailtrapProvider extends MailProvider {
+  private readonly logger = new Logger(MailtrapProvider.name)
   private readonly remetente: { endereco: string, nome: string }
   private readonly client: MailtrapClient
 
@@ -44,17 +44,4 @@ export class MailtrapProvedorEmail extends ProvedorEmail {
       throw error
     }
   }
-
-  // Alias para manter compatibilidade
-  async sendEmail(
-    to: string,
-    subject: string,
-    template: TemplateEmail,
-    context: Record<string, unknown>,
-  ): Promise<void> {
-    return this.enviarEmail(to, subject, template, context)
-  }
 }
-
-// Alias para compatibilidade
-export { MailtrapProvedorEmail as MailtrapMailProvider }

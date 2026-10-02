@@ -4,7 +4,7 @@ import { IsEmail, IsString, MinLength } from 'class-validator'
 export class LoginDto {
   @ApiProperty({
     description: 'E-mail cadastrado',
-    example: 'maria.silva@exemplo.com',
+    example: 'robofox600@gmail.com',
   })
   @IsEmail({}, { message: 'Informe um e-mail válido' })
   email: string
