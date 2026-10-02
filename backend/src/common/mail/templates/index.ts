@@ -1,7 +1,9 @@
 import { recuperacaoSenhaTemplate } from './recuperacao-senha.template'
+import { cadastroAprovadoTemplate } from './cadastro-aprovado.template'
 
 export const templatesEmail: Record<string, (context: any) => string> = {
   'recuperacao-senha': recuperacaoSenhaTemplate,
+  'cadastro-aprovado': cadastroAprovadoTemplate,
 }
 
 export function renderizarTemplateEmail(nomeTemplate: string, contexto: Record<string, unknown>): string {
@@ -13,7 +15,3 @@ export function renderizarTemplateEmail(nomeTemplate: string, contexto: Record<s
 
   return renderizador(contexto)
 }
-
-// Aliases para compatibilidade retroativa
-export const mailTemplates = templatesEmail
-export const renderMailTemplate = renderizarTemplateEmail

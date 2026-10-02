@@ -10,7 +10,7 @@ import { JwtAuthGuard } from '@common/jwt/jwt.guard'
 import type { JwtPayload } from '@common/jwt/jwt.guard'
 
 @ApiTags('Usuários')
-@Controller('usuarios')
+@Controller('usuario')
 export class UserController {
   constructor(private readonly userService: UserService) { }
 

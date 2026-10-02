@@ -24,9 +24,16 @@ model Usuario {
   tokens    Token[]
 }
 
+enum StatusAprovacao {
+  PENDENTE
+  APROVADO
+}
+
 model Psicologo {
-  id_usuario Int    @id
-  crp        String @unique @db.VarChar(7)
+  id_usuario  Int       @id
+  crp         String    @unique @db.VarChar(7)
+  validado    StatusAprovacao   @default(PENDENTE)
+  validado_em DateTime? @db.Timestamp(6)
 
   usuario Usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
 

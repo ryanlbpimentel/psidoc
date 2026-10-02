@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, Logger, UnauthorizedException, NotFoundException } from '@nestjs/common'
+import { BadRequestException, ConflictException, Injectable, Logger, UnauthorizedException, NotFoundException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { createHash, randomBytes } from 'node:crypto'
 import * as bcrypt from 'bcrypt'
@@ -9,6 +9,10 @@ import { LoginDto } from './dto/login.dto'
 import { RegistrarDto } from './dto/registrar.dto'
 import { EsqueciSenhaDto } from './dto/esqueci-senha.dto'
 import { RedefinirSenhaDto } from './dto/redefinir-senha.dto'
+import { ResultadoValidacaoCfp } from '@common/cfp/cfp.interface'
+import { CfpService } from '@common/cfp/cfp.service'
+import { RegistrarResponse } from './interfaces/registrar-response.interface'
+
 
 @Injectable()
 export class UserService {
@@ -18,9 +22,10 @@ export class UserService {
     private readonly prisma: PrismaService,
     private readonly jwt: JwtService,
     private readonly mail: MailService,
+    private readonly cfp: CfpService,
   ) { }
 
-  async registrar(dto: RegistrarDto): Promise<{ access_token: string }> {
+  async registrar(dto: RegistrarDto): Promise<RegistrarResponse> {
     const senha = await bcrypt.hash(dto.senha, 10)
 
     if (await this.prisma.usuario.findUnique({ where: { email: dto.email } })) {
@@ -43,13 +48,22 @@ export class UserService {
           cpf: dto.cpf,
           telefone: dto.telefone,
           senha,
+          esta_ativo: false,
           psicologo: {
-            create: { crp: dto.crp },
+            create: {
+              crp: dto.crp,
+              validado: 'PENDENTE',
+            },
           },
         },
       })
 
-      return this.criarTokenLogin(usuario.id_usuario, usuario.email, usuario.token_version, usuario.nivel_permissao)
+      void this.validarCfpEmSegundoPlano(usuario.id_usuario, usuario.email, usuario.nome, dto.crp)
+
+      return {
+        validado: 'PENDENTE',
+        mensagem: 'Cadastro realizado com sucesso. Aguarde a aprovação do seu cadastro para acessar a plataforma, após a validação você receberá um e-mail de confirmação.',
+      }
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
         throw new ConflictException('E-mail, CPF ou CRP já cadastrado.')
@@ -58,11 +72,62 @@ export class UserService {
     }
   }
 
+  private async validarCfpEmSegundoPlano(
+    id_usuario: number,
+    email: string,
+    nome: string,
+    crp: string,
+  ): Promise<void> {
+    try {
+      const validacao = await this.cfp.validarPsicologo(crp)
+
+      if (validacao.resultado === ResultadoValidacaoCfp.VALIDO) {
+        await this.prisma.$transaction([
+          this.prisma.psicologo.update({
+            where: { id_usuario },
+            data: {
+              validado: 'APROVADO',
+              validado_em: new Date(),
+            },
+          }),
+          this.prisma.usuario.update({
+            where: { id_usuario },
+            data: {
+              esta_ativo: true,
+            },
+          }),
+        ])
+
+        await this.mail.enviarCadastroAprovado(email, nome)
+        this.logger.log(`Psicólogo ${id_usuario} validado automaticamente no CFP. E-mail de aprovação enviado.`)
+      } else {
+        this.logger.warn(
+          `Psicólogo ${id_usuario} não foi validado automaticamente (${validacao.resultado}). O cadastro aguardará o gestor.`,
+        )
+      }
+    } catch (error) {
+      this.logger.error(`Erro ao validar psicólogo ${id_usuario} em segundo plano:`, error)
+    }
+  }
+
   async login(dto: LoginDto): Promise<{ access_token: string }> {
-    const usuario = await this.prisma.usuario.findUnique({ where: { email: dto.email } })
+    const usuario = await this.prisma.usuario.findUnique({
+      where: { email: dto.email },
+      include: { psicologo: true },
+    })
 
     if (!usuario || !(await bcrypt.compare(dto.senha, usuario.senha))) {
       throw new UnauthorizedException('E-mail ou senha inválidos.')
+    }
+
+    if (usuario.psicologo && usuario.psicologo.validado === 'PENDENTE') {
+      throw new UnauthorizedException(
+        'Cadastro em análise. Aguarde a aprovação manual de um gestor para acessar o sistema.',
+      )
+    }
+
+    if (!usuario.esta_ativo) {
+      throw new UnauthorizedException('Usuário inativo. Entre em contato com o suporte.')
     }
 
     return this.criarTokenLogin(usuario.id_usuario, usuario.email, usuario.token_version, usuario.nivel_permissao)
@@ -122,7 +187,7 @@ export class UserService {
         where: { id_token: tokenEncontrado.id_token },
         data: { usado_em: new Date() },
       }),
-      this.prisma.usuario.update({ where: { id_usuario: tokenEncontrado.id_usuario }, data: { senha } }),
+      this.prisma.usuario.update({ where: { id_usuario: tokenEncontrado.id_usuario }, data: { senha, token_version: { increment: 1 } } }),
     ])
   }
 
@@ -172,10 +237,17 @@ export class UserService {
       select: {
         token_version: true,
         esta_ativo: true,
+        psicologo: {
+          select: { validado: true },
+        },
       },
     })
 
     if (!usuario || !usuario.esta_ativo) {
+      return false
+    }
+
+    if (usuario.psicologo && usuario.psicologo.validado !== 'APROVADO') {
       return false
     }
 

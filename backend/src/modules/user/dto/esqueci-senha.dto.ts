@@ -4,7 +4,7 @@ import { IsEmail } from 'class-validator'
 export class EsqueciSenhaDto {
   @ApiProperty({
     description: 'E-mail do usuário para envio do link de recuperação',
-    example: 'maria.silva@exemplo.com',
+    example: 'robofox600@gmail.com',
   })
   @IsEmail({}, { message: 'Informe um e-mail válido' })
   email: string
