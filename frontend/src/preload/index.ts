@@ -1,8 +1,15 @@
-import { contextBridge } from 'electron'
+import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
 
 // Custom APIs for renderer
-const api = {}
+const api = {
+  /** Recebe rotas vindas de links externos (psidoc://...). Retorna a função para cancelar. */
+  onDeepLink: (callback: (route: string) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, route: string) => callback(route)
+    ipcRenderer.on('deep-link', listener)
+    return () => ipcRenderer.removeListener('deep-link', listener)
+  }
+}
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise
