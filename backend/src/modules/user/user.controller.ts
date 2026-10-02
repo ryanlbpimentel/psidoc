@@ -1,10 +1,13 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common'
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger'
+import { Body, Controller, HttpCode, HttpStatus, Post, UseGuards } from '@nestjs/common'
+import { ApiOperation, ApiResponse, ApiTags, ApiBearerAuth } from '@nestjs/swagger'
 import { UserService } from './user.service'
 import { LoginDto } from './dto/login.dto'
 import { RegistrarDto } from './dto/registrar.dto'
 import { EsqueciSenhaDto } from './dto/esqueci-senha.dto'
 import { RedefinirSenhaDto } from './dto/redefinir-senha.dto'
+import { CurrentUser } from '@common/jwt/jwt.decorator'
+import { JwtAuthGuard } from '@common/jwt/jwt.guard'
+import type { JwtPayload } from '@common/jwt/jwt.guard'
 
 @ApiTags('Usuários')
 @Controller('usuarios')
@@ -91,5 +94,15 @@ export class UserController {
   async redefinirSenha(@Body() dto: RedefinirSenhaDto): Promise<{ message: string }> {
     await this.userService.redefinirSenha(dto)
     return { message: 'Senha redefinida com sucesso.' }
+  }
+
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Encerrar sessão do próprio usuário logado' })
+  @ApiResponse({ status: 200, description: 'Sessão encerrada com sucesso.' })
+  @ApiResponse({ status: 401, description: 'Não autorizado ou token inválido.' })
+  @Post('encerrar-sessao/me')
+  async encerrarSessaoMe(@CurrentUser() usuario: JwtPayload) {
+    return this.userService.encerrarSessao(usuario.id_usuario)
   }
 }

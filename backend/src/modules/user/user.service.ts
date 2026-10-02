@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, Logger, UnauthorizedException } from '@nestjs/common'
+import { ConflictException, Injectable, Logger, UnauthorizedException, NotFoundException } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { createHash, randomBytes } from 'node:crypto'
 import * as bcrypt from 'bcrypt'
@@ -23,6 +23,18 @@ export class UserService {
   async registrar(dto: RegistrarDto): Promise<{ access_token: string }> {
     const senha = await bcrypt.hash(dto.senha, 10)
 
+    if (await this.prisma.usuario.findUnique({ where: { email: dto.email } })) {
+      throw new ConflictException('E-mail já cadastrado.')
+    }
+
+    if (await this.prisma.usuario.findUnique({ where: { cpf: dto.cpf } })) {
+      throw new ConflictException('CPF já cadastrado.')
+    }
+
+    if (await this.prisma.psicologo.findUnique({ where: { crp: dto.crp } })) {
+      throw new ConflictException('CRP já cadastrado.')
+    }
+
     try {
       const usuario = await this.prisma.usuario.create({
         data: {
@@ -37,18 +49,13 @@ export class UserService {
         },
       })
 
-      return this.criarTokenLogin(usuario.id_usuario, usuario.email)
+      return this.criarTokenLogin(usuario.id_usuario, usuario.email, usuario.token_version, usuario.nivel_permissao)
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
         throw new ConflictException('E-mail, CPF ou CRP já cadastrado.')
       }
       throw error
     }
-  }
-
-  // Alias para compatibilidade caso chamado em inglês
-  async register(dto: RegistrarDto): Promise<{ access_token: string }> {
-    return this.registrar(dto)
   }
 
   async login(dto: LoginDto): Promise<{ access_token: string }> {
@@ -58,7 +65,7 @@ export class UserService {
       throw new UnauthorizedException('E-mail ou senha inválidos.')
     }
 
-    return this.criarTokenLogin(usuario.id_usuario, usuario.email)
+    return this.criarTokenLogin(usuario.id_usuario, usuario.email, usuario.token_version, usuario.nivel_permissao)
   }
 
   async esqueciSenha(dto: EsqueciSenhaDto): Promise<void> {
@@ -124,7 +131,54 @@ export class UserService {
     return createHash('sha256').update(token).digest('hex')
   }
 
-  private criarTokenLogin(id_usuario: number, email: string): { access_token: string } {
-    return { access_token: this.jwt.sign({ sub: id_usuario, email }) }
+  private criarTokenLogin(id_usuario: number, email: string, token_version: number, nivel_permissao: number): { access_token: string } {
+    return { access_token: this.jwt.sign({ sub: id_usuario, id_usuario, email, token_version, nivel_permissao }) }
+  }
+
+  async encerrarSessao(id_usuario: number) {
+    const usuarioExistente = await this.prisma.usuario.findUnique({
+      where: { id_usuario: id_usuario },
+    })
+
+
+    if (!usuarioExistente) {
+      throw new NotFoundException('Usuário não encontrado')
+    }
+
+    const usuarioAtualizado = await this.prisma.usuario.update({
+      where: { id_usuario: id_usuario },
+      data: {
+        token_version: usuarioExistente.token_version + 1,
+      },
+      select: {
+        id_usuario: true,
+        email: true,
+        token_version: true,
+        nivel_permissao: true,
+      }
+    })
+
+    return {
+      sucesso: true,
+      mensagem: 'Sessão encerrada com sucesso',
+      id_usuario: usuarioAtualizado.id_usuario,
+      nova_versao_token: usuarioAtualizado.token_version,
+    }
+  }
+
+  async validarVersaoToken(id_usuario: number, versaoToken: number): Promise<boolean> {
+    const usuario = await this.prisma.usuario.findUnique({
+      where: { id_usuario },
+      select: {
+        token_version: true,
+        esta_ativo: true,
+      },
+    })
+
+    if (!usuario || !usuario.esta_ativo) {
+      return false
+    }
+
+    return usuario.token_version === versaoToken
   }
 }
