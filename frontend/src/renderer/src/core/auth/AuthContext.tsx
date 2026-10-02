@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { setUnauthorizedHandler } from '@/core/http/api'
+import { api, setUnauthorizedHandler } from '@/core/http/api'
 import { loginRequest, type LoginPayload } from './auth.api'
 import type { SessionUser } from './auth.types'
 import { sessionFromToken, tokenStorage } from './token'
@@ -17,7 +17,9 @@ function restoreSession(): SessionUser | null {
   const token = tokenStorage.get()
   if (!token) return null
   const user = sessionFromToken(token)
-  if (!user) tokenStorage.clear() // token inválido ou expirado
+  if (!user) {
+    tokenStorage.clear()
+  }
   return user
 }
 
@@ -25,18 +27,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(restoreSession)
 
   const logout = useCallback(() => {
+    const token = tokenStorage.get()
+    if (token) {
+      api.post('/usuario/encerrar-sessao/me').catch(() => {
+      })
+    }
     tokenStorage.clear()
     setUser(null)
   }, [])
 
   const login = useCallback<AuthContextValue['login']>(async (credentials) => {
-    const { token, user } = await loginRequest(credentials)
+    const { token, user: loggedUser } = await loginRequest(credentials)
     tokenStorage.set(token)
-    setUser(user)
-    return user
+    setUser(loggedUser)
+    return loggedUser
   }, [])
 
-  // 401 vindo da API (token inválido) derruba a sessão em qualquer tela.
   useEffect(() => {
     setUnauthorizedHandler(logout)
     return () => setUnauthorizedHandler(null)
@@ -48,6 +54,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const ctx = useContext(AuthContext)
-  if (!ctx) throw new Error('useAuth deve ser usado dentro de <AuthProvider>')
+  if (!ctx) {
+    throw new Error('useAuth deve ser usado dentro de <AuthProvider>')
+  }
   return ctx
 }

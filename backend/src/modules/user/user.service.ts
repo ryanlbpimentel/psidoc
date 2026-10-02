@@ -13,7 +13,6 @@ import { ResultadoValidacaoCfp } from '@common/cfp/cfp.interface'
 import { CfpService } from '@common/cfp/cfp.service'
 import { RegistrarResponse } from './interfaces/registrar-response.interface'
 
-
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name)
@@ -72,12 +71,7 @@ export class UserService {
     }
   }
 
-  private async validarCfpEmSegundoPlano(
-    id_usuario: number,
-    email: string,
-    nome: string,
-    crp: string,
-  ): Promise<void> {
+  private async validarCfpEmSegundoPlano(id_usuario: number, email: string, nome: string, crp: string): Promise<void> {
     try {
       const validacao = await this.cfp.validarPsicologo(crp)
 
@@ -130,7 +124,14 @@ export class UserService {
       throw new UnauthorizedException('Usuário inativo. Entre em contato com o suporte.')
     }
 
-    return this.criarTokenLogin(usuario.id_usuario, usuario.email, usuario.token_version, usuario.nivel_permissao)
+    return this.criarTokenLogin(
+      usuario.id_usuario,
+      usuario.nome,
+      usuario.email,
+      usuario.token_version,
+      usuario.nivel_permissao,
+      usuario.psicologo?.crp,
+    )
   }
 
   async esqueciSenha(dto: EsqueciSenhaDto): Promise<void> {
@@ -196,15 +197,36 @@ export class UserService {
     return createHash('sha256').update(token).digest('hex')
   }
 
-  private criarTokenLogin(id_usuario: number, email: string, token_version: number, nivel_permissao: number): { access_token: string } {
-    return { access_token: this.jwt.sign({ sub: id_usuario, id_usuario, email, token_version, nivel_permissao }) }
+  private criarTokenLogin(id_usuario: number, nome: string, email: string, token_version: number, nivel_permissao: number, crp?: string): { access_token: string } {
+    const roles: string[] = []
+    if (crp) {
+      roles.push('PSICOLOGO')
+    }
+    if (nivel_permissao === 10) {
+      roles.push('GESTOR')
+    }
+    if (roles.length === 0) {
+      roles.push('PSICOLOGO')
+    }
+
+    return {
+      access_token: this.jwt.sign({
+        sub: id_usuario.toString(),
+        id_usuario,
+        name: nome,
+        email,
+        token_version,
+        nivel_permissao,
+        roles,
+        crp,
+      }),
+    }
   }
 
   async encerrarSessao(id_usuario: number) {
     const usuarioExistente = await this.prisma.usuario.findUnique({
       where: { id_usuario: id_usuario },
     })
-
 
     if (!usuarioExistente) {
       throw new NotFoundException('Usuário não encontrado')
@@ -220,7 +242,7 @@ export class UserService {
         email: true,
         token_version: true,
         nivel_permissao: true,
-      }
+      },
     })
 
     return {

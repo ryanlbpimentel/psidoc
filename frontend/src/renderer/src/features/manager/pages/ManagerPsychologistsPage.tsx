@@ -1,20 +1,30 @@
 import { useEffect, useState } from 'react'
-import { ChevronDown, ChevronLeft, ChevronRight, CircleCheck, Clock, Funnel, Search, Users } from 'lucide-react'
-import type { UserStatus } from '@/core/auth/auth.types'
+import { ChevronDown, ChevronLeft, ChevronRight, CircleCheck, Clock, Funnel, RotateCw, Search, Users } from 'lucide-react'
 import { getErrorMessage } from '@/core/http/errors'
 import { Notice } from '@/shared/components/ui/Notice'
 import { useDebouncedValue } from '@/shared/hooks/useDebouncedValue'
 import { cn } from '@/shared/lib/cn'
 import { initials } from '@/shared/lib/format'
 import { RowActions } from '../components/RowActions'
-import { STATUS_LABEL, StatusBadge } from '../components/StatusBadge'
-import { managerService, type PsychologistsPage, type StatusFilter } from '../services/manager.service'
+import { StatusBadge } from '../components/StatusBadge'
+import { managerService, type PsychologistsPage, type StatusFilter, type ManagerAction } from '../services/manager.service'
+import { useAuth } from '@/core/auth/AuthContext'
 
 const PAGE_SIZE = 5
-const FILTERS: StatusFilter[] = ['TODOS', 'ATIVO', 'EM_ANALISE', 'INATIVO']
+const FILTERS: StatusFilter[] = ['TODOS', 'EM_ANALISE', 'APROVADO', 'ATIVO', 'INATIVO']
+
+const FILTER_LABEL: Record<StatusFilter, string> = {
+  TODOS: 'Todos',
+  EM_ANALISE: 'Pendente',
+  APROVADO: 'Aprovado',
+  ATIVO: 'Ativo',
+  INATIVO: 'Inativo'
+}
+
 const th = 'px-4 py-3 text-left text-caption font-semibold tracking-wide text-muted uppercase'
 
 export function ManagerPsychologistsPage() {
+  const { user } = useAuth()
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebouncedValue(search)
   const [status, setStatus] = useState<StatusFilter>('TODOS')
@@ -38,11 +48,17 @@ export function ManagerPsychologistsPage() {
     }
   }, [debouncedSearch, status, page, reloadKey])
 
-  const changeStatus = async (id: string, name: string, next: UserStatus) => {
+  const handleAction = async (id: string, name: string, action: ManagerAction) => {
     setFeedback(null)
     try {
-      await managerService.updateStatus(id, next)
-      setFeedback(`${name}: status alterado para "${STATUS_LABEL[next]}".`)
+      await managerService.executeAction(id, action)
+      const messages: Record<ManagerAction, string> = {
+        APROVAR: 'cadastro aprovado com sucesso.',
+        REPROVAR: 'cadastro reprovado e removido.',
+        INATIVAR: 'acesso desativado com sucesso.',
+        ATIVAR: 'acesso ativado com sucesso.'
+      }
+      setFeedback(`${name}: ${messages[action]}`)
       setReloadKey((k) => k + 1)
     } catch (e) {
       setError(getErrorMessage(e))
@@ -92,11 +108,21 @@ export function ManagerPsychologistsPage() {
           >
             {FILTERS.map((f) => (
               <option key={f} value={f}>
-                Status: {f === 'TODOS' ? 'Todos' : STATUS_LABEL[f]}
+                Status: {FILTER_LABEL[f]}
               </option>
             ))}
           </select>
         </label>
+        <button
+          type="button"
+          onClick={() => setReloadKey((k) => k + 1)}
+          disabled={loading}
+          title="Atualizar lista"
+          className="flex h-11 cursor-pointer items-center gap-2 rounded-xl border border-line bg-white px-4 text-body font-medium text-ink transition hover:bg-slate-50 disabled:opacity-50"
+        >
+          <RotateCw className={cn('size-4 text-muted', loading && 'animate-spin')} />
+          Atualizar
+        </button>
       </div>
 
       {feedback && <Notice tone="success" className="mt-4">{feedback}</Notice>}
@@ -109,27 +135,48 @@ export function ManagerPsychologistsPage() {
               <th className={cn(th, 'rounded-tl-2xl')}>Nome</th>
               <th className={th}>E-mail</th>
               <th className={th}>CRP</th>
+              <th className={th}>Validação</th>
               <th className={th}>Status</th>
               <th className={cn(th, 'w-12 rounded-tr-2xl')}><span className="sr-only">Ações</span></th>
             </tr>
           </thead>
           <tbody>
-            {data?.items.map((p) => (
-              <tr key={p.id} className="border-t border-line">
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2.5">
-                    <span className="flex size-7 items-center justify-center rounded-lg bg-brand-100 text-caption font-semibold text-brand-700">{initials(p.name)}</span>
-                    <span className="text-body font-semibold">{p.name}</span>
-                  </div>
-                </td>
-                <td className="px-4 py-3 text-caption text-muted">{p.email}</td>
-                <td className="px-4 py-3 text-caption font-semibold">{p.crp}</td>
-                <td className="px-4 py-3"><StatusBadge status={p.status} /></td>
-                <td className="px-4 py-3 text-right">
-                  <RowActions name={p.name} status={p.status} disabled={loading} onSelect={(next) => changeStatus(p.id, p.name, next)} />
-                </td>
-              </tr>
-            ))}
+            {data?.items.map((p) => {
+              const isSelf = String(p.id) === String(user?.id)
+
+              return (
+                <tr key={p.id} className="border-t border-line">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex size-7 items-center justify-center rounded-lg bg-brand-100 text-caption font-semibold text-brand-700">{initials(p.name)}</span>
+                      <span className="text-body font-semibold">{p.name}</span>
+                      {isSelf && (
+                        <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold text-muted">
+                          Você
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 text-caption text-muted">{p.email}</td>
+                  <td className="px-4 py-3 text-caption font-semibold">{p.crp}</td>
+                  <td className="px-4 py-3"><ValidationBadge status={p.validacao} /></td>
+                  <td className="px-4 py-3"><StatusBadge status={p.status} /></td>
+                  <td className="px-4 py-3 text-right">
+                    {isSelf ? (
+                      <span className="text-caption font-medium text-slate-400 italic">Sua conta</span>
+                    ) : (
+                      <RowActions
+                        name={p.name}
+                        status={p.status}
+                        validacao={p.validacao}
+                        disabled={loading}
+                        onSelect={(action) => handleAction(p.id, p.name, action)}
+                      />
+                    )}
+                  </td>
+                </tr>
+              )
+            })}
             {data && data.items.length === 0 && (
               <tr>
                 <td colSpan={5} className="px-4 py-10 text-center text-body text-muted">Nenhum profissional encontrado. Ajuste a busca ou o filtro de status.</td>
@@ -180,5 +227,20 @@ function PagerButton({ label, active, disabled, onClick, children }: {
     >
       {children}
     </button>
+  )
+}
+
+function ValidationBadge({ status }: { status: 'PENDENTE' | 'VALIDADO' }) {
+  const isValidated = status === 'VALIDADO'
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-caption font-medium',
+        isValidated ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-orange-600'
+      )}
+    >
+      <span className="size-1.5 rounded-full bg-current" aria-hidden />
+      {isValidated ? 'Validado' : 'Pendente'}
+    </span>
   )
 }

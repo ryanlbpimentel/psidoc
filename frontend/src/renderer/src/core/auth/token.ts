@@ -1,9 +1,7 @@
-import type { SessionUser, TokenPayload } from './auth.types'
+import type { SessionUser, TokenPayload, UserRole } from './auth.types'
 
 const KEY = 'psidoc:token'
 
-// A sessão sempre fica salva: o usuário continua logado ao reabrir o app, até clicar em "Sair"
-// ou o token expirar.
 export const tokenStorage = {
   get: () => localStorage.getItem(KEY),
   set: (token: string) => localStorage.setItem(KEY, token),
@@ -22,8 +20,37 @@ export function decodeToken(token: string): TokenPayload | null {
 
 export function sessionFromToken(token: string): SessionUser | null {
   const payload = decodeToken(token)
-  if (!payload || payload.exp * 1000 < Date.now()) return null
-  const roles = payload.roles?.length ? payload.roles : payload.role ? [payload.role] : []
-  if (roles.length === 0) return null
-  return { id: payload.sub, name: payload.name, email: payload.email, roles, crp: payload.crp }
+  if (!payload) return null
+
+  if (payload.exp && payload.exp * 1000 < Date.now()) return null
+
+  const roles: UserRole[] = []
+  if (payload.roles && payload.roles.length > 0) {
+    roles.push(...payload.roles)
+  } else if (payload.role) {
+    roles.push(payload.role)
+  }
+
+  if (payload.crp && !roles.includes('PSICOLOGO')) {
+    roles.push('PSICOLOGO')
+  }
+
+  if (payload.nivel_permissao === 10 && !roles.includes('GESTOR')) {
+    roles.push('GESTOR')
+  }
+
+  if (roles.length === 0) {
+    roles.push('PSICOLOGO')
+  }
+
+  const id = String(payload.sub ?? payload.id_usuario ?? '')
+  const name = payload.name ?? payload.nome ?? payload.email.split('@')[0]
+
+  return {
+    id,
+    name,
+    email: payload.email,
+    roles,
+    crp: payload.crp
+  }
 }

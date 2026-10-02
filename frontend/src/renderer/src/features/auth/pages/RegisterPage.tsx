@@ -76,7 +76,7 @@ function AccountStep({ defaultValues, onNext }: { defaultValues: AccountValues |
       <AuthHeading eyebrow="Crie sua conta" title="Boas-vindas ao PSIDOC" description="Informe seus dados de acesso. Na próxima etapa, validaremos o seu registro profissional." />
       <StepProgress step={1} />
       <form onSubmit={handleSubmit(onNext)} noValidate className="space-y-4">
-        <TextField label="Nome completo" icon={UserRound} placeholder="Como você gostaria de ser chamado(a)" autoComplete="name" error={errors.name?.message} {...register('name')} />
+        <TextField label="Nome completo" icon={UserRound} placeholder="Seu nome completo" autoComplete="name" error={errors.name?.message} {...register('name')} />
         <TextField
           label="Telefone" icon={Phone} placeholder="(99) 99999-9999" inputMode="tel" autoComplete="tel" error={errors.phone?.message}
           {...register('phone', { onChange: (e) => (e.target.value = maskPhone(e.target.value)) })}
