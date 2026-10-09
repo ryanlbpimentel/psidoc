@@ -25,8 +25,6 @@ export interface TokenPayload {
   nome?: string
   email: string
   roles?: UserRole[]
-  role?: UserRole
-  nivel_permissao?: number
   crp?: string
   exp: number
 }

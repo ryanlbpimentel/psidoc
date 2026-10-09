@@ -11,7 +11,7 @@ export class LoginDto {
 
   @ApiProperty({
     description: 'Senha de acesso',
-    example: 'SenhaForte@123',
+    example: '12341234',
     minLength: 8,
   })
   @IsString()

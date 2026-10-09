@@ -22,7 +22,9 @@ export class GestorService {
         if (status) {
             const statusUpper = status.toUpperCase()
 
-            if (statusUpper === 'PENDENTE' || statusUpper === 'EM_ANALISE') {
+            if (statusUpper === 'EM_ANALISE') {
+                where.validado = 'EM_ANALISE'
+            } else if (statusUpper === 'PENDENTE') {
                 where.validado = 'PENDENTE'
             } else if (statusUpper === 'APROVADO') {
                 where.validado = 'APROVADO'
@@ -56,9 +58,9 @@ export class GestorService {
         })
     }
 
-    async aprovarPsicologo(id_usuario: number, usuarioLogadoId: number) {
+    async aprovarPsicologo(idUsuario: number, idUsuarioLogado: number) {
         const psicologo = await this.prisma.psicologo.findUnique({
-            where: { id_usuario },
+            where: { id_usuario: idUsuario },
             include: { usuario: true },
         })
 
@@ -66,24 +68,24 @@ export class GestorService {
             throw new NotFoundException('Psicólogo não encontrado.')
         }
 
-        if (psicologo.validado === 'APROVADO') {
-            throw new BadRequestException('Este psicólogo já se encontra aprovado.')
+        if (psicologo.validado !== 'PENDENTE') {
+            throw new BadRequestException('Este psicólogo já se encontra aprovado ou em análise automática.')
         }
 
-        if (id_usuario === usuarioLogadoId) {
+        if (idUsuario === idUsuarioLogado) {
             throw new BadRequestException('Não é possível aprovar a própria conta.')
         }
 
-        await this.prisma.$transaction([
+        const [psicologoAtualizado] = await this.prisma.$transaction([
             this.prisma.psicologo.update({
-                where: { id_usuario },
+                where: { id_usuario: idUsuario },
                 data: {
                     validado: 'APROVADO',
                     validado_em: new Date(),
                 },
             }),
             this.prisma.usuario.update({
-                where: { id_usuario },
+                where: { id_usuario: idUsuario },
                 data: {
                     esta_ativo: true,
                 },
@@ -92,21 +94,17 @@ export class GestorService {
 
         try {
             await this.mail.enviarCadastroAprovado(psicologo.usuario.email, psicologo.usuario.nome)
-            this.logger.log(`E-mail de aprovação manual enviado para psicólogo ${id_usuario}.`)
+            this.logger.log(`E-mail de aprovação manual enviado para psicólogo ${idUsuario}.`)
         } catch (error) {
-            this.logger.error(`Falha ao enviar e-mail de aprovação manual para psicólogo ${id_usuario}:`, error)
+            this.logger.error(`Falha ao enviar e-mail de aprovação manual para psicólogo ${idUsuario}:`, error)
         }
 
-        return {
-            sucesso: true,
-            mensagem: 'Psicólogo aprovado com sucesso. O usuário já pode acessar o sistema.',
-            id_usuario,
-        }
+        return psicologoAtualizado
     }
 
-    async reprovarPsicologo(id_usuario: number, usuarioLogadoId: number) {
+    async reprovarPsicologo(idUsuario: number, idUsuarioLogado: number): Promise<void> {
         const usuario = await this.prisma.usuario.findUnique({
-            where: { id_usuario },
+            where: { id_usuario: idUsuario },
             include: { psicologo: true },
         })
 
@@ -114,28 +112,22 @@ export class GestorService {
             throw new NotFoundException('Psicólogo não encontrado.')
         }
 
-        if (usuario.psicologo.validado === 'APROVADO') {
-            throw new BadRequestException('Este psicólogo já se encontra aprovado.')
+        if (usuario.psicologo.validado !== 'PENDENTE') {
+            throw new BadRequestException('Este psicólogo já se encontra aprovado ou em análise automática.')
         }
 
-        if (id_usuario === usuarioLogadoId) {
+        if (idUsuario === idUsuarioLogado) {
             throw new BadRequestException('Não é possível reprovar a própria conta.')
         }
 
         await this.prisma.usuario.delete({
-            where: { id_usuario },
+            where: { id_usuario: idUsuario },
         })
-
-        return {
-            sucesso: true,
-            mensagem: 'Cadastro de psicólogo reprovado e removido com sucesso.',
-            id_usuario,
-        }
     }
 
-    async inativarPsicologo(id_usuario: number, usuarioLogadoId: number) {
+    async inativarPsicologo(idUsuario: number, idUsuarioLogado: number) {
         const usuario = await this.prisma.usuario.findUnique({
-            where: { id_usuario },
+            where: { id_usuario: idUsuario },
             include: { psicologo: true },
         })
 
@@ -151,32 +143,30 @@ export class GestorService {
             throw new BadRequestException('Este psicólogo ainda não foi aprovado.')
         }
 
-        if (id_usuario === usuarioLogadoId) {
+        if (idUsuario === idUsuarioLogado) {
             throw new BadRequestException('Não é possível inativar a própria conta.')
         }
 
-        if (usuario.nivel_permissao === 10) {
+        if (usuario.roles.includes('GESTOR')) {
             throw new BadRequestException('Não é possível inativar um gestor.')
         }
 
-        await this.prisma.usuario.update({
-            where: { id_usuario },
+        return this.prisma.usuario.update({
+            where: { id_usuario: idUsuario },
             data: {
                 esta_ativo: false,
                 token_version: usuario.token_version + 1,
             },
+            select: {
+                id_usuario: true,
+                esta_ativo: true,
+            },
         })
-
-        return {
-            sucesso: true,
-            mensagem: 'Acesso do psicólogo inativado com sucesso.',
-            id_usuario,
-        }
     }
 
-    async ativarPsicologo(id_usuario: number, usuarioLogadoId: number) {
+    async ativarPsicologo(idUsuario: number, idUsuarioLogado: number) {
         const usuario = await this.prisma.usuario.findUnique({
-            where: { id_usuario },
+            where: { id_usuario: idUsuario },
             include: { psicologo: true },
         })
 
@@ -192,25 +182,23 @@ export class GestorService {
             throw new BadRequestException('Este psicólogo ainda não foi aprovado.')
         }
 
-        if (id_usuario === usuarioLogadoId) {
+        if (idUsuario === idUsuarioLogado) {
             throw new BadRequestException('Não é possível ativar a própria conta.')
         }
 
-        if (usuario.nivel_permissao === 10) {
+        if (usuario.roles.includes('GESTOR')) {
             throw new BadRequestException('Não é possível ativar um gestor.')
         }
 
-        await this.prisma.usuario.update({
-            where: { id_usuario },
+        return this.prisma.usuario.update({
+            where: { id_usuario: idUsuario },
             data: {
                 esta_ativo: true,
             },
+            select: {
+                id_usuario: true,
+                esta_ativo: true,
+            },
         })
-
-        return {
-            sucesso: true,
-            mensagem: 'Acesso do psicólogo reativado com sucesso.',
-            id_usuario,
-        }
     }
 }

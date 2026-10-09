@@ -6,19 +6,18 @@ import {
 } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 import { Request } from 'express'
-import { UserService } from '@modules/user/user.service'
+import { UserService } from '@modules/usuario/usuario.service'
+import { Role } from '@prisma/client'
 
 export interface JwtPayload {
     id_usuario: number
     email: string
     token_version: number
-    nivel_permissao: number
-    iat?: Date
-    exp?: Date
+    roles: Role[]
 }
 
 export interface AuthenticatedRequest extends Request {
-    user?: JwtPayload
+    user: JwtPayload
 }
 
 @Injectable()
