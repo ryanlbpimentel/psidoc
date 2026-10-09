@@ -27,7 +27,7 @@ export function sessionFromToken(token: string): SessionUser | null {
   const roles: UserRole[] = []
   if (payload.roles && payload.roles.length > 0) {
     roles.push(...payload.roles)
-  } else if (payload.role) {
+  } else if (payload.roles) {
     roles.push(payload.role)
   }
 
@@ -35,7 +35,7 @@ export function sessionFromToken(token: string): SessionUser | null {
     roles.push('PSICOLOGO')
   }
 
-  if (payload.nivel_permissao === 10 && !roles.includes('GESTOR')) {
+  if (payload.roles?.includes('GESTOR') === true && !roles.includes('GESTOR')) {
     roles.push('GESTOR')
   }
 

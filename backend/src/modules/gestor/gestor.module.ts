@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common'
-import { UserModule } from '@modules/user/user.module'
+import { UserModule } from '@modules/usuario/usuario.module'
 import { GestorController } from './gestor.controller'
 import { GestorService } from './gestor.service'
 

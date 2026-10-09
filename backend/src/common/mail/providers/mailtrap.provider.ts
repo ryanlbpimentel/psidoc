@@ -1,6 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { MailtrapClient } from 'mailtrap'
+//import { MailtrapClient } from 'mailtrap'
 import { MailProvider, TemplateEmail } from '../mail.interface'
 import { renderizarTemplateEmail } from '../templates'
 import  * as nodeMailer  from 'nodemailer'

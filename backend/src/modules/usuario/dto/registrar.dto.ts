@@ -1,5 +1,11 @@
 import { ApiProperty } from '@nestjs/swagger'
-import { IsEmail, IsNotEmpty, IsString, Length, MinLength } from 'class-validator'
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsString,
+  Matches,
+  MinLength,
+} from 'class-validator'
 
 export class RegistrarDto {
   @ApiProperty({
@@ -22,7 +28,7 @@ export class RegistrarDto {
     example: '20143908782',
   })
   @IsString()
-  @Length(11, 11, { message: 'O CPF deve ter exatamente 11 dígitos' })
+  @Matches(/^\d{11}$/, { message: 'O CPF deve conter exatamente 11 dígitos numéricos' })
   cpf: string
 
   @ApiProperty({
@@ -30,23 +36,28 @@ export class RegistrarDto {
     example: '21972672346',
   })
   @IsString()
-  @IsNotEmpty({ message: 'O telefone é obrigatório' })
+  @Matches(/^\d{10,11}$/, {
+    message: 'O telefone deve conter DDD e 8 ou 9 dígitos numéricos',
+  })
   telefone: string
 
   @ApiProperty({
-    description: 'Senha de acesso (mínimo de 8 caracteres)',
+    description: 'Senha de acesso (mínimo de 8 caracteres, com letras maiúsculas, minúsculas, números e caracteres especiais)',
     example: 'SenhaForte@123',
     minLength: 8,
   })
   @IsString()
   @MinLength(8, { message: 'A senha deve ter no mínimo 8 caracteres' })
+  @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/, {
+    message: 'A senha deve conter ao menos uma letra maiúscula, uma minúscula, um número e um caractere especial (@$!%*?&#)',
+  })
   senha: string
 
   @ApiProperty({
-    description: 'Registro profissional CRP (exatamente 7 dígitos)',
+    description: 'Registro profissional CRP (aceita com apenas 7 dígitos)',
     example: '1114185',
   })
   @IsString()
-  @Length(7, 7, { message: 'O CRP deve ter exatamente 7 dígitos' })
+  @Matches(/^\d{7}$/, { message: 'O CRP deve conter exatamente 7 dígitos numéricos' })
   crp: string
 }
