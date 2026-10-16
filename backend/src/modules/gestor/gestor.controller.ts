@@ -30,6 +30,8 @@ export class GestorController {
         private readonly gestorService: GestorService,
     ) { }
 
+    //PSICOLOGOS
+
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard, RoleGuard)
     @ExigirNivel(Role.GESTOR)
@@ -70,26 +72,6 @@ export class GestorController {
     @ApiBearerAuth()
     @UseGuards(JwtAuthGuard, RoleGuard)
     @ExigirNivel(Role.GESTOR)
-    @ApiOperation({ summary: 'Encerrar sessão do usuário por ID' })
-    @ApiResponse({ status: 200, description: 'Sessão encerrada com sucesso.' })
-    @ApiResponse({ status: 404, description: 'Usuário não encontrado.' })
-    @ApiResponse({ status: 400, description: 'ID do usuário é obrigatório.' })
-    @Post('usuario/encerrar-sessao/:id')
-    async encerrarSessaoById(@Param('id', ParseIntPipe) idUsuario: number, @CurrentUser() usuarioLogado: JwtPayload) {
-        if (!idUsuario) {
-            throw new BadRequestException('ID do usuário é obrigatório')
-        }
-
-        if (idUsuario === usuarioLogado.id_usuario) {
-            throw new BadRequestException('Não é possível encerrar a própria sessão desta maneira.')
-        }
-
-        return this.userService.encerrarSessao(idUsuario)
-    }
-
-    @ApiBearerAuth()
-    @UseGuards(JwtAuthGuard, RoleGuard)
-    @ExigirNivel(Role.GESTOR)
     @ApiOperation({ summary: 'Inativar acesso de um psicólogo' })
     @ApiResponse({ status: 200, description: 'Acesso inativado com sucesso.' })
     @ApiResponse({ status: 400, description: 'Psicólogo já se encontra inativo.' })
@@ -113,5 +95,26 @@ export class GestorController {
     @Patch('psicologo/:id/ativar')
     async ativarPsicologo(@Param('id', ParseIntPipe) idUsuario: number, @CurrentUser() usuarioLogado: JwtPayload) {
         return this.gestorService.ativarPsicologo(idUsuario, usuarioLogado.id_usuario)
+    }
+
+    @ApiBearerAuth()
+    @UseGuards(JwtAuthGuard, RoleGuard)
+    @ExigirNivel(Role.GESTOR)
+    @ApiOperation({ summary: 'Encerrar sessão do usuário por ID' })
+    @ApiResponse({ status: 200, description: 'Sessão encerrada com sucesso.' })
+    @ApiResponse({ status: 404, description: 'Usuário não encontrado.' })
+    @ApiResponse({ status: 400, description: 'ID do usuário é obrigatório.' })
+    @ApiResponse({ status: 400, description: 'Não é possível encerrar a própria sessão desta maneira.' })
+    @Post('usuario/encerrar-sessao/:id')
+    async encerrarSessaoById(@Param('id', ParseIntPipe) idUsuario: number, @CurrentUser() usuarioLogado: JwtPayload) {
+        if (!idUsuario) {
+            throw new BadRequestException('ID do usuário é obrigatório')
+        }
+
+        if (idUsuario === usuarioLogado.id_usuario) {
+            throw new BadRequestException('Não é possível encerrar a própria sessão desta maneira.')
+        }
+
+        return this.userService.encerrarSessao(idUsuario)
     }
 }
