@@ -41,7 +41,9 @@ model Psicologo {
     validado    StatusAprovacao @default(PENDENTE)
     validado_em DateTime?       @db.Timestamp(6)
 
-    usuario Usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+    usuario        Usuario         @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+    especialidades Especialidade[]
+    pacientes      Paciente[]
 
     @@map("psicologo")
 }
@@ -63,4 +65,98 @@ model Token {
 
     @@index([id_usuario, tipo, criado_em])
     @@map("token")
+}
+
+enum Genero {
+    MASCULINO
+    FEMININO
+    OUTRO
+    NAO_INFORMADO
+}
+
+enum Parentesco {
+    PAI
+    MAE
+    PADRASTO
+    MADRASTA
+    AVOS
+    IRMAOS
+    TUTOR_LEGAL
+    OUTRO
+}
+
+enum Especialidade {
+    CLINICA
+    NEUROPSICOLOGIA
+    OUTRA
+}
+
+model Endereco {
+    id_endereco Int     @id @default(autoincrement())
+    logradouro  String  @db.VarChar(255)
+    numero      String  @db.VarChar(20)
+    complemento String? @db.VarChar(100)
+    bairro      String  @db.VarChar(100)
+    municipio   String  @db.VarChar(100)
+    estado      String  @db.VarChar(50)
+    cep         String  @db.VarChar(9)
+
+    pacientes    Paciente[]
+    responsaveis ResponsavelLegal[]
+
+    @@map("endereco")
+}
+
+model Paciente {
+    id_paciente     Int            @id @default(autoincrement())
+    id_psicologo    Int
+    id_endereco     Int?
+    nome            String         @db.VarChar(100)
+    data_nascimento DateTime       @db.Date
+    telefone        String?        @db.VarChar(15)
+    cpf             String?        @unique @db.VarChar(11)
+    status          StatusPaciente @default(ATIVO)
+    renda_familiar  Decimal?       @db.Decimal(10, 2)
+    genero          Genero?
+    observacoes     String?        @db.Text
+
+    psicologo    Psicologo                    @relation(fields: [id_psicologo], references: [id_usuario], onDelete: Cascade)
+    endereco     Endereco?                    @relation(fields: [id_endereco], references: [id_endereco])
+    responsaveis VinculoPacienteResponsavel[]
+
+    @@map("paciente")
+}
+
+enum StatusPaciente {
+    ATIVO
+    ARQUIVADO
+    FINALIZADO
+}
+
+model ResponsavelLegal {
+    id_responsavel  Int      @id @default(autoincrement())
+    id_endereco     Int
+    nome            String   @db.VarChar(100)
+    data_nascimento DateTime @db.Date
+    telefone        String   @db.VarChar(15)
+    cpf             String   @unique @db.VarChar(11)
+    email           String   @db.VarChar(255)
+
+    endereco  Endereco                     @relation(fields: [id_endereco], references: [id_endereco])
+    pacientes VinculoPacienteResponsavel[]
+
+    @@map("responsavel_legal")
+}
+
+model VinculoPacienteResponsavel {
+    id_vinculo     Int        @id @default(autoincrement())
+    id_paciente    Int
+    id_responsavel Int
+    parentesco     Parentesco
+
+    paciente    Paciente         @relation(fields: [id_paciente], references: [id_paciente], onDelete: Cascade)
+    responsavel ResponsavelLegal @relation(fields: [id_responsavel], references: [id_responsavel], onDelete: Cascade)
+
+    @@unique([id_paciente, id_responsavel])
+    @@map("vinculo_paciente_responsavel")
 }
