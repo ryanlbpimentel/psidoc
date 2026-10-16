@@ -17,7 +17,7 @@ export const PSICOLOGO_NAV: NavItem[] = [
   { to: '/painel', label: 'Painel', icon: LayoutDashboard },
   { to: '/agenda', label: 'Agenda', icon: CalendarDays },
   { to: '/pacientes', label: 'Pacientes', icon: Users },
-  { to: '/transcricao', label: 'Transcrição', icon: Mic },
+  { to: '/sessao', label: 'Sessão', icon: Mic },
   { to: '/documentos', label: 'Documentos', icon: FileText },
   { to: '/financeiro', label: 'Financeiro', icon: Wallet },
   { to: '/configuracoes', label: 'Configurações', icon: SlidersHorizontal }

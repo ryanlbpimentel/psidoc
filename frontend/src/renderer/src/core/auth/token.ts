@@ -27,8 +27,6 @@ export function sessionFromToken(token: string): SessionUser | null {
   const roles: UserRole[] = []
   if (payload.roles && payload.roles.length > 0) {
     roles.push(...payload.roles)
-  } else if (payload.roles) {
-    roles.push(payload.role)
   }
 
   if (payload.crp && !roles.includes('PSICOLOGO')) {

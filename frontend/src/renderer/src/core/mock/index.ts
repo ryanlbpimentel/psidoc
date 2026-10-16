@@ -17,8 +17,9 @@ type Mode = 'auto' | 'mock' | 'real'
 // Um item por grupo de rotas. `probe` é uma chamada "vazia" que só serve para saber se a rota existe:
 // uma API implementada responde 400/401/403/422; uma rota que ainda não existe responde 404.
 const GROUPS = [
-  { name: 'auth', prefix: '/auth', probe: { method: 'POST', url: '/auth/login', data: {} } },
-  { name: 'manager', prefix: '/manager', probe: { method: 'GET', url: '/manager/psychologists' } }
+  { name: 'auth', prefix: '/usuario', probe: { method: 'POST', url: '/usuario/login', data: {} } },
+  { name: 'manager', prefix: '/gestor', probe: { method: 'GET', url: '/gestor/psicologo' } },
+  { name: 'patients', prefix: '/pacientes', probe: { method: 'GET', url: '/pacientes' } }
 ] as const
 
 const PROBE_TIMEOUT_MS = 1500

@@ -1,13 +1,15 @@
 import { useEffect, type ReactNode } from 'react'
+import { cn } from '@/shared/lib/cn'
 
 interface ModalProps {
   open: boolean
   onClose: () => void
   labelledBy: string
   children: ReactNode
+  className?: string
 }
 
-export function Modal({ open, onClose, labelledBy, children }: ModalProps) {
+export function Modal({ open, onClose, labelledBy, children, className }: ModalProps) {
   useEffect(() => {
     if (!open) return
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
@@ -23,7 +25,7 @@ export function Modal({ open, onClose, labelledBy, children }: ModalProps) {
         aria-modal="true"
         aria-labelledby={labelledBy}
         onMouseDown={(e) => e.stopPropagation()}
-        className="w-full max-w-[380px] rounded-3xl bg-white p-6 shadow-2xl"
+        className={cn('max-h-[calc(100vh-3rem)] w-full max-w-[380px] overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl', className)}
       >
         {children}
       </div>
