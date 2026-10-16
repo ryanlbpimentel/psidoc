@@ -38,3 +38,31 @@ export function isValidCpf(value: string) {
   }
   return digit(9) === Number(d[9]) && digit(10) === Number(d[10])
 }
+
+export function maskDate(value: string) {
+  const d = onlyDigits(value).slice(0, 8)
+  if (d.length <= 2) return d
+  if (d.length <= 4) return `${d.slice(0, 2)}/${d.slice(2)}`
+  return `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}`
+}
+
+export function maskCep(value: string) {
+  const d = onlyDigits(value).slice(0, 8)
+  return d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d
+}
+
+/** Valor em reais digitado como "caixa": 350000 → "3.500,00". */
+export function maskMoney(value: string) {
+  const d = onlyDigits(value).slice(0, 12)
+  if (!d) return ''
+  return (Number(d) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+export function parseMoney(value: string): number | null {
+  if (!value.trim()) return null
+  const n = Number(value.replace(/\./g, '').replace(',', '.'))
+  return Number.isFinite(n) ? n : null
+}
+
+export const moneyFromNumber = (n: number) =>
+  n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })

@@ -1,32 +1,12 @@
-import type { SessionUser, TokenPayload, UserRole, UserStatus } from '@/core/auth/auth.types'
-import { decodeToken } from '@/core/auth/token'
+import type { SessionUser, TokenPayload, UserStatus } from '@/core/auth/auth.types'
 import { maskCrp, isValidCrp } from '@/shared/lib/masks'
 import { readResetTokens, readUsers, writeResetTokens, writeUsers, type MockUser } from './db'
+import { MockHttpError, requireRole, type MockRequest, type MockResult } from './http'
+import { backendRoutes } from './backend.handlers'
+import { patientRoutes } from './patients.handlers'
 
-export class MockHttpError extends Error {
-  status: number
-  code?: string
-  fieldErrors?: Record<string, string>
-  constructor(status: number, message: string, code?: string, fieldErrors?: Record<string, string>) {
-    super(message)
-    this.status = status
-    this.code = code
-    this.fieldErrors = fieldErrors
-  }
-}
-
-export interface MockRequest {
-  method: string
-  path: string
-  query: Record<string, string>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  body: any
-  token: string | null
-}
-interface MockResult {
-  status: number
-  data: unknown
-}
+export { MockHttpError }
+export type { MockRequest }
 
 const onlyDigits = (v: string) => v.replace(/\D/g, '')
 
@@ -54,13 +34,6 @@ function signFakeToken(user: MockUser) {
   return `${b64url({ alg: 'none', typ: 'JWT' })}.${b64url(payload)}.mock-signature`
 }
 const toSession = (u: MockUser): SessionUser => ({ id: u.id, name: u.name, email: u.email, roles: u.roles, crp: u.crp })
-
-function requireRole(req: MockRequest, role: UserRole) {
-  const payload = req.token ? decodeToken(req.token) : null
-  if (!payload || payload.exp * 1000 < Date.now()) throw new MockHttpError(401, 'Sessão expirada. Entre novamente.')
-  const roles = payload.roles ?? (payload.role ? [payload.role] : [])
-  if (!roles.includes(role)) throw new MockHttpError(403, 'Você não tem permissão para acessar este recurso.')
-}
 
 // ── Handlers ─────────────────────────────────────────────────────────────────
 function register({ body }: MockRequest): MockResult {
@@ -194,7 +167,9 @@ const routes: { method: string; pattern: RegExp; handler: Handler }[] = [
   { method: 'POST', pattern: /^\/auth\/forgot-password$/, handler: forgotPassword },
   { method: 'POST', pattern: /^\/auth\/reset-password$/, handler: resetPassword },
   { method: 'GET', pattern: /^\/manager\/psychologists$/, handler: listPsychologists },
-  { method: 'PATCH', pattern: /^\/manager\/psychologists\/([^/]+)\/status$/, handler: updateStatus }
+  { method: 'PATCH', pattern: /^\/manager\/psychologists\/([^/]+)\/status$/, handler: updateStatus },
+  ...backendRoutes({ register, login, forgotPassword, resetPassword }),
+  ...patientRoutes
 ]
 
 export function handleMockRequest(req: MockRequest): MockResult {
