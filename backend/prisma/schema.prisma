@@ -44,6 +44,7 @@ model Psicologo {
     usuario        Usuario         @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
     especialidades Especialidade[]
     pacientes      Paciente[]
+    consultas      Consulta[]
 
     @@map("psicologo")
 }
@@ -123,6 +124,7 @@ model Paciente {
     psicologo    Psicologo                    @relation(fields: [id_psicologo], references: [id_usuario], onDelete: Cascade)
     endereco     Endereco?                    @relation(fields: [id_endereco], references: [id_endereco])
     responsaveis VinculoPacienteResponsavel[]
+    consultas    Consulta[]
 
     @@map("paciente")
 }
@@ -159,4 +161,19 @@ model VinculoPacienteResponsavel {
 
     @@unique([id_paciente, id_responsavel])
     @@map("vinculo_paciente_responsavel")
+}
+
+model Consulta {
+    id_consulta  Int      @id @default(autoincrement())
+    id_psicologo Int
+    id_paciente  Int
+    inicio       DateTime @db.Timestamp(6)
+    fim          DateTime @db.Timestamp(6)
+    local        String   @db.VarChar(255)
+
+    psicologo Psicologo @relation(fields: [id_psicologo], references: [id_usuario], onDelete: Cascade)
+    paciente  Paciente  @relation(fields: [id_paciente], references: [id_paciente], onDelete: Cascade)
+
+    @@index([id_psicologo, inicio])
+    @@map("consulta")
 }
