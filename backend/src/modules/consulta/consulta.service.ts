@@ -12,6 +12,8 @@ import { ConsultarAgendaDto } from './dto/consultar-agenda.dto'
 import { EnviarLembreteDto } from './dto/enviar-lembrete.dto'
 
 const DURACAO_SESSAO_MS = 60 * 60 * 1000
+const EXTENSAO_SESSAO_MS = 10 * 60 * 1000
+const ANTECEDENCIA_ALERTA_MS = 10 * 60 * 1000
 const FUSO_HORARIO = 'America/Sao_Paulo'
 
 @Injectable()
@@ -110,5 +112,57 @@ export class ConsultaService {
         }
 
         return { sucesso: true, id_consulta: consulta.id_consulta, canal: dto.canal }
+    }
+
+    async consultarEmAndamento(idPsicologo: number) {
+        const agora = new Date()
+
+        const consultas = await this.prisma.consulta.findMany({
+            where: {
+                id_psicologo: idPsicologo,
+                inicio: { lte: agora },
+                fim: { gte: agora },
+            },
+            orderBy: { inicio: 'asc' },
+            include: { paciente: { select: { nome: true } } },
+        })
+
+        return consultas.map((consulta) => {
+            const restanteMs = consulta.fim.getTime() - agora.getTime()
+
+            return {
+                ...consulta,
+                minutos_restantes: Math.ceil(restanteMs / 60000),
+                alertar: restanteMs <= ANTECEDENCIA_ALERTA_MS,
+            }
+        })
+    }
+
+    async estenderConsulta(idPsicologo: number, idConsulta: number) {
+        const consulta = await this.prisma.consulta.findFirst({
+            where: {
+                id_consulta: idConsulta,
+                id_psicologo: idPsicologo,
+            },
+        })
+
+        if (!consulta) {
+            throw new NotFoundException('Consulta não encontrada.')
+        }
+
+        const agora = new Date()
+
+        if (agora < consulta.inicio || agora > consulta.fim) {
+            throw new BadRequestException('A consulta não está em andamento.')
+        }
+
+        if (consulta.fim.getTime() - consulta.inicio.getTime() > DURACAO_SESSAO_MS) {
+            throw new BadRequestException('A consulta já foi estendida.')
+        }
+
+        return this.prisma.consulta.update({
+            where: { id_consulta: idConsulta },
+            data: { fim: new Date(consulta.fim.getTime() + EXTENSAO_SESSAO_MS) },
+        })
     }
 }

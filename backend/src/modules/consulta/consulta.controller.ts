@@ -6,6 +6,7 @@ import {
     HttpStatus,
     Param,
     ParseIntPipe,
+    Patch,
     Post,
     Query,
     UseGuards,
@@ -67,5 +68,27 @@ export class ConsultaController {
         @Body() dto: EnviarLembreteDto,
     ) {
         return this.consultaService.enviarLembrete(usuario.id_usuario, id, dto)
+    }
+
+    @Get('em-andamento')
+    @ApiOperation({ summary: 'Lista as consultas em andamento agora, com os minutos restantes e o aviso de término' })
+    @ApiResponse({
+        status: HttpStatus.OK,
+        description: 'Consultas em andamento (lista vazia se não houver nenhuma). "alertar" fica true quando faltam 10 minutos ou menos.',
+    })
+    consultarEmAndamento(@CurrentUser() usuario: JwtPayload) {
+        return this.consultaService.consultarEmAndamento(usuario.id_usuario)
+    }
+
+    @Patch(':id/estender')
+    @ApiOperation({ summary: 'Estende em 10 minutos a consulta em andamento (uma vez só)' })
+    @ApiResponse({ status: HttpStatus.OK, description: 'Consulta estendida com sucesso.' })
+    @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Consulta fora de andamento ou já estendida.' })
+    @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Consulta não encontrada.' })
+    estenderConsulta(
+        @CurrentUser() usuario: JwtPayload,
+        @Param('id', ParseIntPipe) id: number,
+    ) {
+        return this.consultaService.estenderConsulta(usuario.id_usuario, id)
     }
 }
