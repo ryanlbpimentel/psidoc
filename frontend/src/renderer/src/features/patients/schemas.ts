@@ -20,7 +20,7 @@ export const personalSchema = z.object({
   telefone: z.string().refine((v) => v === '' || phone(v), 'O telefone deve conter DDD e 8 ou 9 dígitos'),
   genero: z.string(),
   renda_familiar: z.string(),
-  observacoes: z.string()
+  observacoes: z.string().max(5000, 'As observações devem ter no máximo 5000 caracteres')
 })
 
 export const addressSchema = z.object({

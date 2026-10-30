@@ -3,7 +3,7 @@
 
 export type PatientStatus = 'ATIVO' | 'ARQUIVADO' | 'FINALIZADO'
 export type Gender = 'MASCULINO' | 'FEMININO' | 'OUTRO' | 'NAO_INFORMADO'
-export type Kinship = 'PAI' | 'MAE' | 'PADRASTO' | 'MADRASTA' | 'AVOS' | 'IRMAOS' | 'OUTRO'
+export type Kinship = 'PAI' | 'MAE' | 'PADRASTO' | 'MADRASTA' | 'AVOS' | 'IRMAOS' | 'TUTOR_LEGAL' | 'OUTRO'
 export type FinanceStatus = 'EM_DIA' | 'PENDENTE' | 'ATRASADO'
 
 export interface Patient {

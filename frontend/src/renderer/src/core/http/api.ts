@@ -26,7 +26,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     const apiError = normalizeError(error)
-    if (apiError.status === 401 && tokenStorage.get()) {
+    if (apiError.status === 401 && tokenStorage.get() && apiError.code !== 'INVALID_PASSWORD') {
       onUnauthorized?.()
     }
     return Promise.reject(apiError)

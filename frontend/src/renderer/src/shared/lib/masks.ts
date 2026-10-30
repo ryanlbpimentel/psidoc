@@ -53,7 +53,7 @@ export function maskCep(value: string) {
 
 /** Valor em reais digitado como "caixa": 350000 → "3.500,00". */
 export function maskMoney(value: string) {
-  const d = onlyDigits(value).slice(0, 12)
+  const d = onlyDigits(value).slice(0, 10)
   if (!d) return ''
   return (Number(d) / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }

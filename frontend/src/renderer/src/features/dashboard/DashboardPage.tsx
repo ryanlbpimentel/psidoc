@@ -1,14 +1,18 @@
+import { useState } from 'react'
 import { CirclePlus, UserPlus } from 'lucide-react'
 import { useAuth } from '@/core/auth/AuthContext'
 import { Button } from '@/shared/components/ui/Button'
 import { cn } from '@/shared/lib/cn'
 import { formatBRL, greeting } from '@/shared/lib/format'
+import { NewPatientDialog } from '@/features/patients/components/NewPatientDialog'
 import { clinicalSummary, monthlyRevenue, pendingPayments, todayAgenda } from './dashboard.data'
 
 const card = 'rounded-2xl border border-line bg-white p-5'
 
 export function DashboardPage() {
   const { user } = useAuth()
+  const [newPatientOpen, setNewPatientOpen] = useState(false)
+
   return (
     <div className="mx-auto max-w-[1100px]">
       <div className="flex flex-wrap items-start justify-between gap-4">
@@ -22,7 +26,7 @@ export function DashboardPage() {
           <Button size="sm">
             <CirclePlus className="size-4" aria-hidden /> Nova Consulta
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => setNewPatientOpen(true)}>
             <UserPlus className="size-4" aria-hidden /> Novo Paciente
           </Button>
         </div>
@@ -89,6 +93,8 @@ export function DashboardPage() {
           </section>
         </div>
       </div>
+
+      <NewPatientDialog open={newPatientOpen} onClose={() => setNewPatientOpen(false)} />
     </div>
   )
 }

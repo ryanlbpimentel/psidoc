@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Check } from 'lucide-react'
@@ -9,7 +9,7 @@ import { SelectField } from '@/shared/components/ui/SelectField'
 import { TextField } from '@/shared/components/ui/TextField'
 import { maskCep } from '@/shared/lib/masks'
 import { UF_OPTIONS } from '../constants'
-import { addressPayload, toAddressForm } from '../mappers'
+import { addressPayload, hasAddressChanges, toAddressForm } from '../mappers'
 import { addressSchema, type AddressValues } from '../schemas'
 import { patientsService } from '../services/patients.service'
 import type { Address } from '../types'
@@ -29,9 +29,19 @@ export function AddressEditor({ patientId, address, onSaved, onDirtyChange }: Pr
   const [serverError, setServerError] = useState<string | null>(null)
   const [justSaved, setJustSaved] = useState(false)
   const {
-    register, handleSubmit, reset, setError,
-    formState: { errors, isDirty, isSubmitting }
+    register, handleSubmit, reset, setError, setValue, watch,
+    formState: { errors, isSubmitting }
   } = useForm<AddressValues>({ resolver: zodResolver(addressSchema), defaultValues: toAddressForm(address) })
+
+  useEffect(() => {
+    reset(toAddressForm(address))
+  }, [address, reset])
+
+  const formValues = watch()
+  const isDirty = useMemo(
+    () => hasAddressChanges(formValues, address),
+    [formValues, address]
+  )
 
   useEffect(() => {
     onDirtyChange(isDirty)
@@ -54,7 +64,7 @@ export function AddressEditor({ patientId, address, onSaved, onDirtyChange }: Pr
     }
   })
 
-  const state = address ? (isDirty ? 'dirty' : 'saved') : 'unsaved'
+  const state = address ? (isDirty ? 'dirty' : 'saved') : (isDirty ? 'dirty' : 'unregistered')
 
   return (
     <SectionCard title="Endereço" aside={<SectionStatus state={state} />}>
@@ -75,7 +85,13 @@ export function AddressEditor({ patientId, address, onSaved, onDirtyChange }: Pr
         <div className="max-w-[220px]">
           <TextField
             label="CEP *" placeholder="00000-000" inputMode="numeric" autoComplete="off" error={errors.cep?.message}
-            {...register('cep', { onChange: (e) => (e.target.value = maskCep(e.target.value)) })}
+            {...register('cep', {
+              onChange: (e) => {
+                const masked = maskCep(e.target.value)
+                e.target.value = masked
+                setValue('cep', masked)
+              }
+            })}
           />
         </div>
 
