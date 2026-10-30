@@ -6,6 +6,7 @@ import {
     HttpCode,
     HttpStatus,
     Param,
+    ParseIntPipe,
     Patch,
     Post,
     Put,
@@ -66,7 +67,7 @@ export class PacienteController {
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Paciente não encontrado.' })
     consultarPacientePorId(
         @CurrentUser() usuario: JwtPayload,
-        @Param('id') id: number,
+        @Param('id', ParseIntPipe) id: number,
     ) {
         return this.pacienteService.consultarPacientePorId(usuario.id_usuario, id)
     }
@@ -79,7 +80,7 @@ export class PacienteController {
     @ApiResponse({ status: HttpStatus.CONFLICT, description: 'CPF já em uso por outro paciente.' })
     atualizarPaciente(
         @CurrentUser() usuario: JwtPayload,
-        @Param('id') id: number,
+        @Param('id', ParseIntPipe) id: number,
         @Body() dto: AtualizarPacienteDto,
     ) {
         return this.pacienteService.atualizarPaciente(usuario.id_usuario, id, dto)
@@ -92,7 +93,7 @@ export class PacienteController {
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Paciente não encontrado.' })
     cadastrarEndereco(
         @CurrentUser() usuario: JwtPayload,
-        @Param('id') id: number,
+        @Param('id', ParseIntPipe) id: number,
         @Body() dto: AtualizarEnderecoDto,
     ) {
         return this.pacienteService.cadastrarEndereco(usuario.id_usuario, id, dto)
@@ -107,7 +108,7 @@ export class PacienteController {
     @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Limite de responsáveis atingido ou dados inválidos.' })
     adicionarResponsavel(
         @CurrentUser() usuario: JwtPayload,
-        @Param('id') id: number,
+        @Param('id', ParseIntPipe) id: number,
         @Body() dto: CadastrarResponsavelDto,
     ) {
         return this.pacienteService.cadastrarResponsavel(usuario.id_usuario, id, dto)
@@ -121,8 +122,8 @@ export class PacienteController {
     @ApiResponse({ status: HttpStatus.CONFLICT, description: 'CPF já em uso por outro responsável.' })
     atualizarResponsavel(
         @CurrentUser() usuario: JwtPayload,
-        @Param('id') id: number,
-        @Param('idResponsavel') idResponsavel: number,
+        @Param('id', ParseIntPipe) id: number,
+        @Param('idResponsavel', ParseIntPipe) idResponsavel: number,
         @Body() dto: AtualizarResponsavelDto,
     ) {
         return this.pacienteService.atualizarResponsavel(usuario.id_usuario, id, idResponsavel, dto)
@@ -135,8 +136,8 @@ export class PacienteController {
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Vínculo não encontrado.' })
     excluirResponsavel(
         @CurrentUser() usuario: JwtPayload,
-        @Param('id') id: number,
-        @Param('idResponsavel') idResponsavel: number,
+        @Param('id', ParseIntPipe) id: number,
+        @Param('idResponsavel', ParseIntPipe) idResponsavel: number,
     ) {
         return this.pacienteService.excluirResponsavel(usuario.id_usuario, id, idResponsavel)
     }
@@ -148,7 +149,7 @@ export class PacienteController {
     @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Paciente não encontrado.' })
     @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Paciente ativo não pode ser excluído.' })
     @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Senha incorreta.' })
-    excluirPaciente(@CurrentUser() usuario: JwtPayload,@Param('id') id: number, @Body() dto: ExcluirPacienteDto) {
+    excluirPaciente(@CurrentUser() usuario: JwtPayload,@Param('id', ParseIntPipe) id: number, @Body() dto: ExcluirPacienteDto) {
         return this.pacienteService.excluirPaciente(usuario.id_usuario, id, dto)
     }
 }

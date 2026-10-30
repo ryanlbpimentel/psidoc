@@ -42,10 +42,13 @@ export function normalizeError(error: unknown): ApiError {
 
     let code: string | undefined = data?.code
     if (!code) {
-      if (rawMessage.toLowerCase().includes('em análise')) {
+      const lower = rawMessage.toLowerCase()
+      if (lower.includes('em análise')) {
         code = 'PENDING_APPROVAL'
-      } else if (rawMessage.toLowerCase().includes('expirado') || rawMessage.toLowerCase().includes('código inválido')) {
+      } else if (lower.includes('expirado') || lower.includes('código inválido')) {
         code = 'INVALID_RESET_TOKEN'
+      } else if (lower.includes('senha') && (lower.includes('incorret') || lower.includes('inválid'))) {
+        code = 'INVALID_PASSWORD'
       }
     }
 

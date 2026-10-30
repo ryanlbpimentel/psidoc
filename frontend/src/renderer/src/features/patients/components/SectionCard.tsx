@@ -1,13 +1,14 @@
 import type { ReactNode } from 'react'
-import { Check, ShieldAlert } from 'lucide-react'
+import { Check, Info, ShieldAlert } from 'lucide-react'
 import { cn } from '@/shared/lib/cn'
 
-export type SectionState = 'saved' | 'dirty' | 'unsaved'
+export type SectionState = 'saved' | 'dirty' | 'unsaved' | 'unregistered'
 
 const STATE = {
   saved: { label: 'Salvo', className: 'bg-emerald-50 text-emerald-700', icon: Check },
   dirty: { label: 'Alterações não salvas', className: 'bg-amber-50 text-orange-600', icon: ShieldAlert },
-  unsaved: { label: 'Atenção: não salvo', className: 'bg-amber-50 text-orange-600', icon: ShieldAlert }
+  unsaved: { label: 'Atenção: não salvo', className: 'bg-amber-50 text-orange-600', icon: ShieldAlert },
+  unregistered: { label: 'Não cadastrado', className: 'bg-slate-100 text-muted', icon: Info }
 } as const
 
 export function SectionStatus({ state }: { state: SectionState }) {

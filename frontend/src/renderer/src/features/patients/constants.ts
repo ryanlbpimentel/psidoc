@@ -17,6 +17,7 @@ export const KINSHIP_OPTIONS: { value: Kinship; label: string }[] = [
   { value: 'MADRASTA', label: 'Madrasta' },
   { value: 'AVOS', label: 'Avós' },
   { value: 'IRMAOS', label: 'Irmãos' },
+  { value: 'TUTOR_LEGAL', label: 'Tutor(a) legal' },
   { value: 'OUTRO', label: 'Outro' }
 ]
 

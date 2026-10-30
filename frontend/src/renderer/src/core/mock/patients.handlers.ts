@@ -6,7 +6,7 @@ import { readPatients, writePatients, type DbPatient } from './patients.db'
 
 // Regras de validação espelham os DTOs do back (class-validator).
 const GENDERS = ['MASCULINO', 'FEMININO', 'OUTRO', 'NAO_INFORMADO']
-const KINSHIPS = ['PAI', 'MAE', 'PADRASTO', 'MADRASTA', 'AVOS', 'IRMAOS', 'OUTRO']
+const KINSHIPS = ['PAI', 'MAE', 'PADRASTO', 'MADRASTA', 'AVOS', 'IRMAOS', 'TUTOR_LEGAL', 'OUTRO']
 const STATUSES: PatientStatus[] = ['ATIVO', 'ARQUIVADO', 'FINALIZADO']
 const MAX_GUARDIANS = 3
 
@@ -53,6 +53,7 @@ function validatePatient(body: Record<string, unknown>, partial: boolean) {
   optional('genero', (v) => GENDERS.includes(String(v)), 'Gênero informado é inválido')
   optional('renda_familiar', (v) => typeof v === 'number' && v >= 0, 'A renda familiar não pode ser negativa')
   optional('status', (v) => STATUSES.includes(v as PatientStatus), 'Status de paciente inválido')
+  optional('observacoes', (v) => typeof v === 'string' && v.length <= 5000, 'As observações devem ter no máximo 5000 caracteres')
   fail(e)
 }
 
@@ -265,6 +266,18 @@ function deleteGuardian(req: MockRequest, [id, guardianId]: string[]): MockResul
   return { status: 204, data: null }
 }
 
+function saveAddressPut(req: MockRequest, [id]: string[]): MockResult {
+  requireRole(req, 'PSICOLOGO')
+  const all = readPatients()
+  const patient = findPatient(all, id)
+  assertEditable(patient)
+  const merged = { ...(patient.endereco ?? {}), ...(req.body ?? {}) } as Address
+  validateAddress(merged)
+  patient.endereco = merged
+  writePatients(all)
+  return { status: 200, data: merged }
+}
+
 function listRecords(req: MockRequest, [id]: string[]): MockResult {
   requireRole(req, 'PSICOLOGO')
   const records = [...findPatient(readPatients(), id).registros].sort((a, b) => b.data_hora.localeCompare(a.data_hora))
@@ -272,17 +285,18 @@ function listRecords(req: MockRequest, [id]: string[]): MockResult {
 }
 
 export const patientRoutes: MockRoute[] = [
-  { method: 'GET', pattern: /^\/pacientes$/, handler: listPatients },
-  { method: 'POST', pattern: /^\/pacientes$/, handler: createPatient },
-  { method: 'GET', pattern: /^\/pacientes\/([^/]+)$/, handler: getPatient },
-  { method: 'PATCH', pattern: /^\/pacientes\/([^/]+)$/, handler: updatePatient },
-  { method: 'DELETE', pattern: /^\/pacientes\/([^/]+)$/, handler: deletePatient },
-  { method: 'GET', pattern: /^\/pacientes\/([^/]+)\/endereco$/, handler: getAddress },
-  { method: 'POST', pattern: /^\/pacientes\/([^/]+)\/endereco$/, handler: createAddress },
-  { method: 'PATCH', pattern: /^\/pacientes\/([^/]+)\/endereco$/, handler: updateAddress },
-  { method: 'GET', pattern: /^\/pacientes\/([^/]+)\/responsaveis$/, handler: listGuardians },
-  { method: 'POST', pattern: /^\/pacientes\/([^/]+)\/responsaveis$/, handler: createGuardian },
-  { method: 'PATCH', pattern: /^\/pacientes\/([^/]+)\/responsaveis\/([^/]+)$/, handler: updateGuardian },
-  { method: 'DELETE', pattern: /^\/pacientes\/([^/]+)\/responsaveis\/([^/]+)$/, handler: deleteGuardian },
-  { method: 'GET', pattern: /^\/pacientes\/([^/]+)\/registros$/, handler: listRecords }
+  { method: 'GET', pattern: /^\/pacientes?$/, handler: listPatients },
+  { method: 'POST', pattern: /^\/pacientes?$|^\/paciente\/cadastrar$/, handler: createPatient },
+  { method: 'GET', pattern: /^\/pacientes?\/([^/]+)$/, handler: getPatient },
+  { method: 'PATCH', pattern: /^\/pacientes?\/([^/]+)$/, handler: updatePatient },
+  { method: 'DELETE', pattern: /^\/pacientes?\/([^/]+)$/, handler: deletePatient },
+  { method: 'GET', pattern: /^\/pacientes?\/([^/]+)\/endereco$/, handler: getAddress },
+  { method: 'POST', pattern: /^\/pacientes?\/([^/]+)\/endereco$/, handler: createAddress },
+  { method: 'PATCH', pattern: /^\/pacientes?\/([^/]+)\/endereco$/, handler: updateAddress },
+  { method: 'PUT', pattern: /^\/pacientes?\/([^/]+)\/endereco$/, handler: saveAddressPut },
+  { method: 'GET', pattern: /^\/pacientes?\/([^/]+)\/(?:responsaveis|responsavel)$/, handler: listGuardians },
+  { method: 'POST', pattern: /^\/pacientes?\/([^/]+)\/(?:responsaveis|responsavel)$/, handler: createGuardian },
+  { method: 'PATCH', pattern: /^\/pacientes?\/([^/]+)\/(?:responsaveis|responsavel)\/([^/]+)$/, handler: updateGuardian },
+  { method: 'DELETE', pattern: /^\/pacientes?\/([^/]+)\/(?:responsaveis|responsavel)\/([^/]+)$/, handler: deleteGuardian },
+  { method: 'GET', pattern: /^\/pacientes?\/([^/]+)\/registros$/, handler: listRecords }
 ]
