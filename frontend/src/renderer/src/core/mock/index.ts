@@ -19,7 +19,8 @@ type Mode = 'auto' | 'mock' | 'real'
 const GROUPS = [
   { name: 'auth', prefix: '/usuario', probe: { method: 'POST', url: '/usuario/login', data: {} } },
   { name: 'manager', prefix: '/gestor', probe: { method: 'GET', url: '/gestor/psicologo' } },
-  { name: 'patients', prefix: '/paciente', probe: { method: 'GET', url: '/paciente' } }
+  { name: 'patients', prefix: '/paciente', probe: { method: 'GET', url: '/paciente' } },
+  { name: 'consultas', prefix: '/consulta', probe: { method: 'GET', url: '/consulta' } }
 ] as const
 
 const PROBE_TIMEOUT_MS = 1500

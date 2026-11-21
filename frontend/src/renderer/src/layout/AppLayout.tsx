@@ -3,15 +3,21 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { ShieldCheck } from 'lucide-react'
 import { useAuth } from '@/core/auth/AuthContext'
 import { isUsingMock } from '@/core/http/apiStatus'
+import { SessionAlertWatcher } from '@/features/session/components/SessionAlertWatcher'
+import { SessionProvider } from '@/features/session/SessionProvider'
 import { Breadcrumbs, BreadcrumbProvider } from './breadcrumb'
 import { LogoutDialog } from './LogoutDialog'
 import { Sidebar } from './Sidebar'
 
 /** Estrutura das telas logadas: sidebar + barra superior + conteúdo. */
 export function AppLayout() {
+  const { user } = useAuth()
   return (
     <BreadcrumbProvider>
-      <AppShell />
+      {/* A sessão em andamento (e o alerta de fim) vale para qualquer tela do psicólogo. */}
+      <SessionProvider enabled={!!user?.roles.includes('PSICOLOGO')}>
+        <AppShell />
+      </SessionProvider>
     </BreadcrumbProvider>
   )
 }
@@ -58,6 +64,7 @@ function AppShell() {
             )}
           </div>
         </header>
+        {user.roles.includes('PSICOLOGO') && <SessionAlertWatcher />}
         <main className="flex-1 overflow-y-auto bg-page p-8">
           <Outlet />
         </main>

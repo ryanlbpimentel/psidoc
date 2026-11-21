@@ -15,7 +15,7 @@ const KEY = 'psidoc:mock:patients'
 //   Bruno Henrique Costa → ficha completa, financeiro pendente
 //   Clarice Fontes       → só nome, nascimento e telefone: SEM endereço (adicionar responsável fica bloqueado)
 //   Daniel Gouveia       → 13 anos, 3 responsáveis (limite atingido), financeiro atrasado
-//   Eduardo Santoro      → sem CPF, sem endereço, sem sessão agendada
+//   Eduardo Santoro      → sem CPF, sem endereço, SEM telefone (o lembrete da agenda avisa que não dá para enviar)
 //   Gabriela Vasconcelos → 16 anos, 1 responsável
 //   Helena Duarte e Lucas Azevedo → já arquivados (aparecem em "Pacientes arquivados")
 //
@@ -73,7 +73,7 @@ const SEED: DbPatient[] = [
     registros: records('p-daniel')
   },
   {
-    id: 'p-eduardo', nome: 'Eduardo Santoro', data_nascimento: '1985-07-30', telefone: '21933332222',
+    id: 'p-eduardo', nome: 'Eduardo Santoro', data_nascimento: '1985-07-30',
     genero: 'MASCULINO', status: 'ATIVO', proxima_sessao: null, financeiro: 'EM_DIA',
     endereco: null, responsaveis: [], registros: records('p-eduardo')
   },

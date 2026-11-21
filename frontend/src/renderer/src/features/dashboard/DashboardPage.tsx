@@ -5,7 +5,8 @@ import { Button } from '@/shared/components/ui/Button'
 import { cn } from '@/shared/lib/cn'
 import { formatBRL, greeting } from '@/shared/lib/format'
 import { NewPatientDialog } from '@/features/patients/components/NewPatientDialog'
-import { clinicalSummary, monthlyRevenue, pendingPayments, todayAgenda } from './dashboard.data'
+import { TodayAgenda } from '@/features/agenda/components/TodayAgenda'
+import { clinicalSummary, monthlyRevenue, pendingPayments } from './dashboard.data'
 
 const card = 'rounded-2xl border border-line bg-white p-5'
 
@@ -39,15 +40,7 @@ export function DashboardPage() {
               <h2 id="agenda-title" className="text-lead font-semibold">Agenda de Hoje</h2>
               <a href="#/agenda" className="text-body font-medium text-brand-700 hover:underline">Ver agenda completa</a>
             </div>
-            <ul className="space-y-2.5">
-              {todayAgenda.map((item) => (
-                <li key={item.time} className="flex items-center gap-3 rounded-xl bg-slate-50 px-3 py-2.5">
-                  <span className="rounded-lg bg-brand-100 px-2 py-1 text-caption font-semibold text-brand-700">{item.time}</span>
-                  <span className="flex-1 text-body font-semibold">{item.patient}</span>
-                  <span className="rounded-full bg-brand-100 px-2.5 py-0.5 text-caption font-medium text-brand-700">{item.place}</span>
-                </li>
-              ))}
-            </ul>
+            <TodayAgenda />
           </section>
 
           <section className={card} aria-labelledby="pending-title">
