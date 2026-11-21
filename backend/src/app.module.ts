@@ -4,9 +4,10 @@ import { MailModule } from '@common/mail/mail.module'
 import { UserModule } from '@modules/usuario/usuario.module'
 import { GestorModule } from '@modules/gestor/gestor.module'
 import { PacienteModule } from '@modules/paciente/paciente.module'
+import { ConsultaModule } from '@modules/consulta/consulta.module'
 
 @Module({
-  imports: [PrismaModule, MailModule, UserModule, GestorModule, PacienteModule],
+  imports: [PrismaModule, MailModule, UserModule, GestorModule, PacienteModule, ConsultaModule],
   controllers: [],
   providers: [],
 })

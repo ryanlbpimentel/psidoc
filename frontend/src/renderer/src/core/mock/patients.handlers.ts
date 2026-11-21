@@ -59,15 +59,15 @@ function validatePatient(body: Record<string, unknown>, partial: boolean) {
 
 function listPatients(req: MockRequest): MockResult {
   requireRole(req, 'PSICOLOGO')
-  const status = (req.query.status ?? 'ATIVO') as PatientStatus
+  const status = req.query.status as PatientStatus | undefined // sem status = todos, como no back
   const busca = fold(req.query.busca ?? '').trim()
   const buscaDigits = onlyDigits(busca)
-  const page = Math.max(1, Number(req.query.page ?? 1))
-  const pageSize = Math.max(1, Number(req.query.pageSize ?? 6))
+  const page = Math.max(1, Number(req.query.pagina ?? req.query.page ?? 1))
+  const pageSize = Math.max(1, Number(req.query.limite ?? req.query.pageSize ?? 6))
 
   const all = readPatients()
   const filtered = all
-    .filter((p) => p.status === status)
+    .filter((p) => !status || p.status === status)
     .filter((p) => !busca || fold(p.nome).includes(busca) || (buscaDigits.length > 0 && (p.cpf ?? '').includes(buscaDigits)))
     .sort((a, b) =>
       status === 'ARQUIVADO'

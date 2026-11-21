@@ -5,6 +5,7 @@ import { ForgotPasswordPage } from '@/features/auth/pages/ForgotPasswordPage'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
 import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage'
 import { RegisterPage } from '@/features/auth/pages/RegisterPage'
+import { AgendaPage } from '@/features/agenda/pages/AgendaPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { ManagerPsychologistsPage } from '@/features/manager/pages/ManagerPsychologistsPage'
 import { ArchivedPatientsPage } from '@/features/patients/pages/ArchivedPatientsPage'
@@ -14,6 +15,7 @@ import { PatientRecordView } from '@/features/patients/pages/PatientRecordView'
 import { PatientShell } from '@/features/patients/pages/PatientShell'
 import { PatientSoonPage } from '@/features/patients/pages/PatientSoonPage'
 import { PatientsListPage } from '@/features/patients/pages/PatientsListPage'
+import { SessionPage } from '@/features/session/pages/SessionPage'
 import { ComingSoonPage } from '@/shared/components/ComingSoonPage'
 import { PSICOLOGO_NAV } from '@/layout/navigation'
 
@@ -32,6 +34,8 @@ export function AppRoutes() {
       <Route element={<ProtectedRoute roles={['PSICOLOGO']} />}>
         <Route element={<AppLayout />}>
           <Route path="/painel" element={<DashboardPage />} />
+          <Route path="/agenda" element={<AgendaPage />} />
+          <Route path="/sessao" element={<SessionPage />} />
 
           <Route path="/pacientes" element={<PatientsListPage />} />
           <Route path="/pacientes/arquivados" element={<ArchivedPatientsPage />} />
@@ -42,7 +46,7 @@ export function AppRoutes() {
             <Route path=":aba" element={<PatientSoonPage />} />
           </Route>
 
-          {PSICOLOGO_NAV.filter((i) => i.to !== '/painel' && i.to !== '/pacientes').map((item) => (
+          {PSICOLOGO_NAV.filter((i) => !['/painel', '/pacientes', '/agenda', '/sessao'].includes(i.to)).map((item) => (
             <Route key={item.to} path={item.to} element={<ComingSoonPage title={item.label} />} />
           ))}
         </Route>

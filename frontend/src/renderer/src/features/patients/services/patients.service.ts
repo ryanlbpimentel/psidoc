@@ -9,14 +9,14 @@ import type {
 const BASE = '/paciente'
 
 export const patientsService = {
-  async list(params: { status: 'ATIVO' | 'ARQUIVADO'; busca: string; page: number; pageSize: number }): Promise<PatientsPage> {
+  async list(params: { status?: 'ATIVO' | 'ARQUIVADO' | 'FINALIZADO'; busca: string; page: number; pageSize: number }): Promise<PatientsPage> {
     const { data } = await api.get(BASE, {
       params: {
         status: params.status,
         busca: params.busca || undefined,
-        page: params.page,
-        limit: params.pageSize,
-        pageSize: params.pageSize
+        // O back pagina com `pagina` e `limite` (parâmetros desconhecidos são ignorados por ele).
+        pagina: params.page,
+        limite: params.pageSize
       }
     })
 

@@ -3,6 +3,7 @@ import { maskCrp, isValidCrp } from '@/shared/lib/masks'
 import { readResetTokens, readUsers, writeResetTokens, writeUsers, type MockUser } from './db'
 import { MockHttpError, requireRole, type MockRequest, type MockResult } from './http'
 import { backendRoutes } from './backend.handlers'
+import { consultaRoutes } from './consulta.handlers'
 import { patientRoutes } from './patients.handlers'
 
 export { MockHttpError }
@@ -169,7 +170,8 @@ const routes: { method: string; pattern: RegExp; handler: Handler }[] = [
   { method: 'GET', pattern: /^\/manager\/psychologists$/, handler: listPsychologists },
   { method: 'PATCH', pattern: /^\/manager\/psychologists\/([^/]+)\/status$/, handler: updateStatus },
   ...backendRoutes({ register, login, forgotPassword, resetPassword }),
-  ...patientRoutes
+  ...patientRoutes,
+  ...consultaRoutes
 ]
 
 export function handleMockRequest(req: MockRequest): MockResult {
