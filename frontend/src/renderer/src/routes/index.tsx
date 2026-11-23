@@ -7,6 +7,10 @@ import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage'
 import { RegisterPage } from '@/features/auth/pages/RegisterPage'
 import { AgendaPage } from '@/features/agenda/pages/AgendaPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
+import { FaturamentoPage } from '@/features/financeiro/pages/FaturamentoPage'
+import { PacotesPage } from '@/features/financeiro/pages/PacotesPage'
+import { PagamentosPage } from '@/features/financeiro/pages/PagamentosPage'
+import { ParcelasPage } from '@/features/financeiro/pages/ParcelasPage'
 import { ManagerPsychologistsPage } from '@/features/manager/pages/ManagerPsychologistsPage'
 import { ArchivedPatientsPage } from '@/features/patients/pages/ArchivedPatientsPage'
 import { PatientNotesPage } from '@/features/patients/pages/PatientNotesPage'
@@ -37,6 +41,11 @@ export function AppRoutes() {
           <Route path="/agenda" element={<AgendaPage />} />
           <Route path="/sessao" element={<SessionPage />} />
 
+          <Route path="/financeiro" element={<PagamentosPage />} />
+          <Route path="/financeiro/faturamento" element={<FaturamentoPage />} />
+          <Route path="/financeiro/pacotes" element={<PacotesPage />} />
+          <Route path="/financeiro/pacotes/parcelas" element={<ParcelasPage />} />
+
           <Route path="/pacientes" element={<PatientsListPage />} />
           <Route path="/pacientes/arquivados" element={<ArchivedPatientsPage />} />
           <Route path="/pacientes/:id" element={<PatientShell />}>
@@ -46,7 +55,7 @@ export function AppRoutes() {
             <Route path=":aba" element={<PatientSoonPage />} />
           </Route>
 
-          {PSICOLOGO_NAV.filter((i) => !['/painel', '/pacientes', '/agenda', '/sessao'].includes(i.to)).map((item) => (
+          {PSICOLOGO_NAV.filter((i) => !['/painel', '/pacientes', '/agenda', '/sessao', '/financeiro'].includes(i.to)).map((item) => (
             <Route key={item.to} path={item.to} element={<ComingSoonPage title={item.label} />} />
           ))}
         </Route>

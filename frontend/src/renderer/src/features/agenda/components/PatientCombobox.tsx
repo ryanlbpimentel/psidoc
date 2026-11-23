@@ -23,7 +23,7 @@ interface PatientComboboxProps {
   error?: string
 }
 
-git statusexport function PatientCombobox({ value, onChange, error }: PatientComboboxProps) {
+export function PatientCombobox({ value, onChange, error }: PatientComboboxProps) {
   const [open, setOpen] = useState(false)
   const [term, setTerm] = useState('')
   const debounced = useDebouncedValue(term, 300)
