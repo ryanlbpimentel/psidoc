@@ -4,6 +4,7 @@ import { readResetTokens, readUsers, writeResetTokens, writeUsers, type MockUser
 import { MockHttpError, requireRole, type MockRequest, type MockResult } from './http'
 import { backendRoutes } from './backend.handlers'
 import { consultaRoutes } from './consulta.handlers'
+import { financeiroRoutes } from './financeiro.handlers'
 import { patientRoutes } from './patients.handlers'
 
 export { MockHttpError }
@@ -171,7 +172,8 @@ const routes: { method: string; pattern: RegExp; handler: Handler }[] = [
   { method: 'PATCH', pattern: /^\/manager\/psychologists\/([^/]+)\/status$/, handler: updateStatus },
   ...backendRoutes({ register, login, forgotPassword, resetPassword }),
   ...patientRoutes,
-  ...consultaRoutes
+  ...consultaRoutes,
+  ...financeiroRoutes
 ]
 
 export function handleMockRequest(req: MockRequest): MockResult {
